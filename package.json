@@ -1,0 +1,75 @@
+{
+  "name": "HIGWAY",
+  "displayName": "RENudgeExtension",
+  "description": "RE Nudge Extension",
+  "version": "0.0.1",
+  "publisher": "TheHartford",
+  "engines": {
+    "vscode": "^1.83.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:HIGWAY.helloWorld",
+    "onCommand:HIGWAY.FirstCommand",
+    "onCommand:HIGWAY.ScanDocument"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "HIGWAY.run",
+        "title": "Todo",
+        "category": "TODO"
+      },
+      {
+        "command": "HIGWAY.helloWorld",
+        "title": "Hello World",
+        "category": "HIGWAY"
+      },
+      {
+        "title": "First Command",
+        "command": "HIGWAY.FirstCommand",
+        "category": "HIGWAY"
+      },
+      {
+        "title": "Scan Document",
+        "command": "HIGWAY.ScanDocument",
+        "category": "HIGWAY"
+      },
+      {
+        "title": "Prompt Test",
+        "command": "HIGWAY.PromptTest",
+        "category": "HIGWAY"
+      },
+      {
+        "title": "Terminal Test",
+        "command": "HIGWAY.TerminalTest",
+        "category": "HIGWAY"
+      }
+    ]
+  },
+  "scripts": {
+    "build:webview": "cd webview-ui && npm run build",
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.6",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.83.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.2",
+    "@typescript-eslint/parser": "^7.0.2",
+    "@vscode/test-cli": "^0.0.6",
+    "@vscode/test-electron": "^2.3.9",
+    "axios": "^1.6.8",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "typescript": "^5.3.3"
+  }
+}
