@@ -1,15 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import {
-  ExtensionContext,
-  languages,
-  commands,
-  Disposable,
-  workspace,
-  window,
-  Uri,
-} from "vscode";
+import { ExtensionContext, commands, Disposable, window } from "vscode";
 import axios from "axios";
 import https from "https";
 import { TodoPanel } from "./panels/TodoPanel";

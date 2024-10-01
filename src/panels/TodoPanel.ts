@@ -7,28 +7,14 @@ import {
   ViewColumn,
 } from "vscode";
 import { getNonce, getUri } from "../utils";
+import axios from "axios";
+import * as https from "https";
 
-/**
- * This class manages the state and behavior of HelloWorld webview panels.
- *
- * It contains all the data and methods for:
- *
- * - Creating and rendering HelloWorld webview panels
- * - Properly cleaning up and disposing of webview resources when the panel is closed
- * - Setting the HTML (and by proxy CSS/JavaScript) content of the webview panel
- * - Setting message listeners so data can be passed between the webview and extension
- */
 export class TodoPanel {
   public static currentPanel: TodoPanel | undefined;
   private readonly _panel: WebviewPanel;
   private _disposables: Disposable[] = [];
 
-  /**
-   * The TodoPanel class private constructor (called only from the render method).
-   *
-   * @param panel A reference to the webview panel
-   * @param extensionUri The URI of the directory containing the extension
-   */
   private constructor(panel: WebviewPanel, extensionUri: Uri) {
     this._panel = panel;
 
@@ -46,13 +32,25 @@ export class TodoPanel {
     this._setWebviewMessageListener(this._panel.webview);
   }
 
-  /**
-   * Renders the current webview panel if it exists otherwise a new webview panel
-   * will be created and displayed.
-   *
-   * @param extensionUri The URI of the directory containing the extension.
-   */
-  public static render(extensionUri: Uri) {
+  private async fetchApiData(name: string) {
+    try {
+      const response = await axios.get(
+        `https://dummyjson.com/users/search?q=${name}`
+      );
+
+      // Send the API data to the webview (React app)
+      this._panel.webview.postMessage({
+        command: "sendData",
+        payload: { users: response.data.users, specificUser: name },
+      });
+    } catch (error) {
+      console.error("Error fetching API data:", error);
+    }
+  }
+
+  public static async render(extensionUri: Uri) {
+    https.globalAgent.options.rejectUnauthorized = false;
+    const res = await axios.get("https://dummyjson.com/users");
     if (TodoPanel.currentPanel) {
       // If the webview panel already exists reveal it
       TodoPanel.currentPanel._panel.reveal(ViewColumn.One);
@@ -78,6 +76,13 @@ export class TodoPanel {
       );
 
       TodoPanel.currentPanel = new TodoPanel(panel, extensionUri);
+
+      setTimeout(() => {
+        panel.webview.postMessage({
+          command: "sendData",
+          payload: { users: res.data.users, specificUser: "" },
+        });
+      }, 1000);
     }
   }
 
@@ -99,17 +104,6 @@ export class TodoPanel {
     }
   }
 
-  /**
-   * Defines and returns the HTML that should be rendered within the webview panel.
-   *
-   * @remarks This is also the place where references to the React webview build files
-   * are created and inserted into the webview HTML.
-   *
-   * @param webview A reference to the extension webview
-   * @param extensionUri The URI of the directory containing the extension
-   * @returns A template string literal containing the HTML that should be
-   * rendered within the webview panel
-   */
   private _getWebviewContent(webview: Webview, extensionUri: Uri) {
     // The CSS file from the React build output
     const stylesUri = getUri(webview, extensionUri, [
@@ -136,37 +130,45 @@ export class TodoPanel {
             <meta charset="UTF-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+            
             <link rel="stylesheet" type="text/css" href="${stylesUri}">
             <title>Todo</title>
           </head>
           <body>
+          
+          <input type="text" />
             <div id="root"></div>
+            <script nonce="${nonce}">
+          const vscode = acquireVsCodeApi(); // Exposes the VS Code API globally
+          window.vscode = vscode;
+        </script>
             <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
           </body>
         </html>
       `;
   }
 
-  /**
-   * Sets up an event listener to listen for messages passed from the webview context and
-   * executes code based on the message that is recieved.
-   *
-   * @param webview A reference to the extension webview
-   * @param context A reference to the extension context
-   */
   private _setWebviewMessageListener(webview: Webview) {
     webview.onDidReceiveMessage(
       (message: any) => {
         const command = message.command;
-        const text = message.text;
+        const updatedData: any = message.payload;
 
         switch (command) {
           case "ready":
-            console.log("ready");
-            // Code that should run in response to the hello message command
-            return;
-          // Add more switch case statements here as more webview message commands
-          // are created within the webview context (i.e. inside media/main.js)
+            console.log("Webview is ready");
+            break;
+
+          case "updateTask":
+            console.log("Updated Task:", updatedData);
+            // Here you can handle the updated data, save it, or do any logic
+            window.showInformationMessage(
+              `Task updated to: ${updatedData.task}`
+            );
+            break;
+          case "fetchApiData":
+            this.fetchApiData(updatedData.specificUser);
+            break;
         }
       },
       undefined,
