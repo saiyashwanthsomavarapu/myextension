@@ -9,26 +9,26 @@ import { TodoPanel } from "./panels/TodoPanel";
 let disposables: Disposable[] = [];
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-async function fetchUsers() {
-  try {
-    // const agent = new https.Agent({rejectUnauthorized: false});
-    // axios.defaults.httpsAgent = agent;
-    const httpsAgent = new https.Agent({
-      rejectUnauthorized: false,
-      minVersion: "TLSv1",
-    });
-    const response = await axios.get(
-      "https://jsonplaceholder.typicode.com/users",
-      { httpsAgent: httpsAgent }
-    );
-    const users = response.data;
-    console.log("List of users:");
-    console.log(users);
-    return users;
-  } catch (error) {
-    console.error("Error fetching users:", error);
-  }
-}
+// async function fetchUsers() {
+//   try {
+//     // const agent = new https.Agent({rejectUnauthorized: false});
+//     // axios.defaults.httpsAgent = agent;
+//     const httpsAgent = new https.Agent({
+//       rejectUnauthorized: false,
+//       minVersion: "TLSv1",
+//     });
+//     const response = await axios.get(
+//       "https://jsonplaceholder.typicode.com/users",
+//       { httpsAgent: httpsAgent }
+//     );
+//     const users = response.data;
+//     console.log("List of users:");
+//     console.log(users);
+//     return users;
+//   } catch (error) {
+//     console.error("Error fetching users:", error);
+//   }
+// }
 
 async function promptExecution(prompt: string) {
   try {
@@ -56,58 +56,72 @@ async function promptExecution(prompt: string) {
   }
 }
 
-async function dt_appslo() {
-  try {
-    const response = await fetch(
-      "https://internal-app-4868-dev-1-ue1-docsn-alb-1-183475484.us-east-1.elb.amazonaws.com",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          appID: "5050",
-        }),
-      }
-    );
-    const appSlos: any = await response.json();
-    console.log("API Response:");
-    console.log(appSlos);
-    console.log("List of users:");
-    console.log(appSlos.dtInformation.slo);
-    return appSlos.dtInformation.slo;
+// async function dt_appslo() {
+//   try {
+//     const response = await fetch(
+//       "https://internal-app-4868-dev-1-ue1-docsn-alb-1-183475484.us-east-1.elb.amazonaws.com",
+//       {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Accept: "application/json",
+//         },
+//         body: JSON.stringify({
+//           appID: "5050",
+//         }),
+//       }
+//     );
+//     const appSlos: any = await response.json();
+//     console.log("API Response:");
+//     console.log(appSlos);
+//     console.log("List of users:");
+//     console.log(appSlos.dtInformation.slo);
+//     return appSlos.dtInformation.slo;
 
-    // const agent = new https.Agent({rejectUnauthorized: false});
-    // axios.defaults.httpsAgent = agent;
-    // const httpsAgent = new https.Agent({rejectUnauthorized: false, minVersion: 'TLSv1',});
-    // const response = await axios.post('https://internal-app-4868-dev-1-ue1-docsn-alb-1-183475484.us-east-1.elb.amazonaws.com',
-    // {
-    // 	appID : "5050"
-    // },
-    // {
-    // 	httpsAgent: httpsAgent,
-    // 	headers: {Accept: "application/json"}
-    // });
-    // const appSlos =  response.data;
-    // console.log('API Response:');
-    // console.log(response.data);
-    // console.log('List of users:');
-    // console.log(appSlos.dtInformation.slo);
-    // return appSlos.dtInformation.slo;
-  } catch (error) {
-    console.error("Error fetching users:", error);
-  }
-}
+// const agent = new https.Agent({rejectUnauthorized: false});
+// axios.defaults.httpsAgent = agent;
+// const httpsAgent = new https.Agent({rejectUnauthorized: false, minVersion: 'TLSv1',});
+// const response = await axios.post('https://internal-app-4868-dev-1-ue1-docsn-alb-1-183475484.us-east-1.elb.amazonaws.com',
+// {
+// 	appID : "5050"
+// },
+// {
+// 	httpsAgent: httpsAgent,
+// 	headers: {Accept: "application/json"}
+// });
+// const appSlos =  response.data;
+// console.log('API Response:');
+// console.log(response.data);
+// console.log('List of users:');
+// console.log(appSlos.dtInformation.slo);
+// return appSlos.dtInformation.slo;
+//   } catch (error) {
+//     console.error("Error fetching users:", error);
+//   }
+// }
 
 export function activate(context: ExtensionContext) {
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log('Congratulations, your extension "HelloHIG" is now active!');
+  context.subscriptions.push(
+    commands.registerCommand("HIGWAY.getByMax", async () => {
+      const input = await vscode.window.showInputBox({
+        prompt: "Max value",
+        placeHolder: "Enter max value",
+      });
+
+      TodoPanel.render(context.extensionUri, input);
+    })
+  );
 
   context.subscriptions.push(
-    commands.registerCommand("HIGWAY.run", () => {
-      console.log("webview-ui");
+    commands.registerCommand("HIGWAY.run", async () => {
+      const input = await vscode.window.showInputBox({
+        prompt: "Enter some input",
+        placeHolder: "e.g., type something here",
+      });
+
+      if (input) {
+        vscode.window.showInformationMessage(`You entered: ${input}`);
+      }
       TodoPanel.render(context.extensionUri);
     })
   );

@@ -10,14 +10,15 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:HIGWAY.helloWorld",
-    "onCommand:HIGWAY.FirstCommand",
-    "onCommand:HIGWAY.ScanDocument"
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
+      {
+        "command": "HIGWAY.getByMax",
+        "title": "Get By Max Value",
+        "category": "TODO"
+      },
       {
         "command": "HIGWAY.run",
         "title": "Todo",

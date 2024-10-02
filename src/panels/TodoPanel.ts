@@ -32,25 +32,73 @@ export class TodoPanel {
     this._setWebviewMessageListener(this._panel.webview);
   }
 
-  private async fetchApiData(name: string) {
-    try {
-      const response = await axios.get(
-        `https://dummyjson.com/users/search?q=${name}`
-      );
+  // private async fetchApiData(name: string) {
+  //   try {
+  //     const response = await axios.get(
+  //       `https://dummyjson.com/users/search?q=${name}`
+  //     );
 
-      // Send the API data to the webview (React app)
-      this._panel.webview.postMessage({
-        command: "sendData",
-        payload: { users: response.data.users, specificUser: name },
-      });
-    } catch (error) {
-      console.error("Error fetching API data:", error);
-    }
-  }
+  //     // Send the API data to the webview (React app)
+  //     this._panel.webview.postMessage({
+  //       command: "sendData",
+  //       payload: { users: response.data.users, specificUser: name },
+  //     });
+  //   } catch (error) {
+  //     console.error("Error fetching API data:", error);
+  //   }
+  // }
 
-  public static async render(extensionUri: Uri) {
+  public static async render(extensionUri: Uri, inputValue: string = "") {
+    const data = {
+      result: [
+        {
+          data: [
+            {
+              dimensions: ["1", "2"],
+              dimensionsMap: {
+                "dt.entity.host.name": "1",
+                "dt.entity.host": "2",
+              },
+              timestamps: ["234343"],
+              values: [33.96],
+            },
+            {
+              dimensions: ["1", "2"],
+              dimensionsMap: {
+                "dt.entity.host.name": "1",
+                "dt.entity.host": "2",
+              },
+              timestamps: ["234343"],
+              values: [33.96],
+            },
+            {
+              dimensions: ["1", "2"],
+              dimensionsMap: {
+                "dt.entity.host.name": "1",
+                "dt.entity.host": "2",
+              },
+              timestamps: ["234343"],
+              values: [33.96],
+            },
+            {
+              dimensions: ["1", "2"],
+              dimensionsMap: {
+                "dt.entity.host.name": "1",
+                "dt.entity.host": "2",
+              },
+              timestamps: ["234343"],
+              values: [33.96],
+            },
+          ],
+        },
+      ],
+    };
     https.globalAgent.options.rejectUnauthorized = false;
-    const res = await axios.get("https://dummyjson.com/users");
+    /* https://ssy45929.live.dynatrace.com/api/v2/metrics/query?metricSelector=builtin:host.cpu.usage:filter(and(or(in("dt.entity.host", entitySelector("type(host),tag(~"[AWS]Appld:4534~")"))))):splitBy("dt.entity.host"):sort(value(auto,descending)):limit (20):fold(${inpuValue}):na
+     mes */
+    const res = await axios.get(
+      `https://dummyjson.com/users/search?q=${inputValue}`
+    );
     if (TodoPanel.currentPanel) {
       // If the webview panel already exists reveal it
       TodoPanel.currentPanel._panel.reveal(ViewColumn.One);
@@ -58,9 +106,9 @@ export class TodoPanel {
       // If a webview panel does not already exist create and show a new one
       const panel = window.createWebviewPanel(
         // Panel view type
-        "todoview",
+        "higway",
         // Panel title
-        "Todo",
+        "Higway",
         // The editor column the panel should be displayed in
         ViewColumn.One,
         // Extra panel configurations
@@ -76,11 +124,11 @@ export class TodoPanel {
       );
 
       TodoPanel.currentPanel = new TodoPanel(panel, extensionUri);
-
+      // res.data.result[0].data // data from API
       setTimeout(() => {
         panel.webview.postMessage({
           command: "sendData",
-          payload: { users: res.data.users, specificUser: "" },
+          payload: { mertics: data.result[0].data, specificUser: "" },
         });
       }, 1000);
     }
@@ -135,13 +183,11 @@ export class TodoPanel {
             <title>Todo</title>
           </head>
           <body>
-          
-          <input type="text" />
             <div id="root"></div>
             <script nonce="${nonce}">
-          const vscode = acquireVsCodeApi(); // Exposes the VS Code API globally
-          window.vscode = vscode;
-        </script>
+                const vscode = acquireVsCodeApi(); // Exposes the VS Code API globally
+                window.vscode = vscode;
+            </script>
             <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
           </body>
         </html>
@@ -160,15 +206,14 @@ export class TodoPanel {
             break;
 
           case "updateTask":
-            console.log("Updated Task:", updatedData);
             // Here you can handle the updated data, save it, or do any logic
             window.showInformationMessage(
               `Task updated to: ${updatedData.task}`
             );
             break;
-          case "fetchApiData":
-            this.fetchApiData(updatedData.specificUser);
-            break;
+          // case "fetchApiData":
+          //   this.fetchApiData(updatedData.specificUser);
+          //   break;
         }
       },
       undefined,
