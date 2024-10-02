@@ -3,3 +3,30 @@ dist
 node_modules
 .vscode-test/
 *.vsix
+webview-ui/build
+
+# Logs
+webview-ui/logs
+webview-ui/*.log
+webview-ui/npm-debug.log*
+webview-ui/yarn-debug.log*
+webview-ui/yarn-error.log*
+webview-ui/pnpm-debug.log*
+webview-ui/lerna-debug.log*
+
+webview-ui/node_modules
+webview-ui/build
+webview-ui/dist
+webview-ui/dist-ssr
+webview-ui/*.local
+
+# Editor directories and files
+webview-ui/.vscode/*
+webview-ui/!.vscode/extensions.json
+webview-ui/.idea
+webview-ui/.DS_Store
+webview-ui/*.suo
+webview-ui/*.ntvs*
+webview-ui/*.njsproj
+webview-ui/*.sln
+webview-ui/*.sw?
