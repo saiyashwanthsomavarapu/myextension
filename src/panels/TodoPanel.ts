@@ -118,7 +118,7 @@ export class TodoPanel {
           // Restrict the webview to only load resources from the `out` and `webview-ui/build` directories
           localResourceRoots: [
             Uri.joinPath(extensionUri, "out"),
-            Uri.joinPath(extensionUri, "webview-ui/build"),
+            Uri.joinPath(extensionUri, "webview-ui/dist"),
           ],
         }
       );
@@ -156,14 +156,14 @@ export class TodoPanel {
     // The CSS file from the React build output
     const stylesUri = getUri(webview, extensionUri, [
       "webview-ui",
-      "build",
+      "dist",
       "assets",
       "index.css",
     ]);
     // The JS file from the React build output
     const scriptUri = getUri(webview, extensionUri, [
       "webview-ui",
-      "build",
+      "dist",
       "assets",
       "index.js",
     ]);
