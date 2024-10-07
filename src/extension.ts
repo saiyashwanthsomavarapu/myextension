@@ -4,7 +4,7 @@ import * as vscode from "vscode";
 import { ExtensionContext, commands, Disposable, window } from "vscode";
 import axios from "axios";
 import https from "https";
-import { TodoPanel } from "./panels/TodoPanel";
+import { SidebarProvider } from "./panels/SidebarPanel";
 
 let disposables: Disposable[] = [];
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -101,29 +101,10 @@ async function promptExecution(prompt: string) {
 // }
 
 export function activate(context: ExtensionContext) {
+  // Sidebar view
+  const sidebarProvider = new SidebarProvider(context.extensionUri);
   context.subscriptions.push(
-    commands.registerCommand("HIGWAY.getByMax", async () => {
-      const input = await vscode.window.showInputBox({
-        prompt: "Max value",
-        placeHolder: "Enter max value",
-      });
-
-      TodoPanel.render(context.extensionUri, input);
-    })
-  );
-
-  context.subscriptions.push(
-    commands.registerCommand("HIGWAY.run", async () => {
-      const input = await vscode.window.showInputBox({
-        prompt: "Enter some input",
-        placeHolder: "e.g., type something here",
-      });
-
-      if (input) {
-        vscode.window.showInformationMessage(`You entered: ${input}`);
-      }
-      TodoPanel.render(context.extensionUri);
-    })
+    vscode.window.registerWebviewViewProvider("higway-sidebar", sidebarProvider)
   );
 
   commands.registerCommand("HIGWAY.helloWorld", () => {
