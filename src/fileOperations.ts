@@ -28,8 +28,8 @@ export async function readYAMLFile(webview: Webview) {
     if (typeof data === "object") {
       setTimeout(() => {
         webview.postMessage({
-          command: "options",
-          payload: { options: data.service.dynatrace.options },
+          command: "services",
+          payload: { services: data.service },
         });
       }, 1000);
 

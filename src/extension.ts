@@ -19,6 +19,15 @@ export function activate(context: ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("nudge.selectYAMLFile", selectYAMLFilePath)
   );
+
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("config.yamlFilePath")) {
+        // Refresh the sidebar when the YAML file path is modified
+        sidebarProvider.refresh();
+      }
+    })
+  );
 }
 
 // this method is called when your extension is deactivated

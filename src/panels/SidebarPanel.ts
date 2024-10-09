@@ -1,4 +1,4 @@
-import { WebviewViewProvider, WebviewView, Uri } from "vscode";
+import { WebviewViewProvider, WebviewView, Uri, window } from "vscode";
 import axios from "axios";
 import { readYAMLFile } from "../fileOperations";
 import { getUri, getNonce } from "../utils"; // Helper functions for nonce and URIs
@@ -29,6 +29,15 @@ export class SidebarProvider implements WebviewViewProvider {
 
     // Automatically call the API when the sidebar is loaded
     this._fetchApiData("max");
+  }
+
+  public async refresh() {
+    if (this._view) {
+      await this.resolveWebviewView(this._view);
+      window.showInformationMessage(
+        "Sidebar refreshed after YAML path update."
+      );
+    }
   }
 
   private _getWebviewContent(webview: any): string {

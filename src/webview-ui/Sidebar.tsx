@@ -32,7 +32,9 @@ const styles = makeStyles({
 
 function Sidebar() {
     const [metricsData, setMetricsData] = useState<any>([]);
+    const [ymlData, setYmlData] = useState<any>([]);
     const [selectedOption, setSelectedOption] = useState<string>('');
+    const [selectService, setSelectServices] = useState<string>('');
     const [options, setOptions] = useState<string[]>([]);
     const style = styles();
     const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary-color');
@@ -46,9 +48,9 @@ function Sidebar() {
             if (transferedData.command === 'sendData') {
                 setMetricsData(transferedData.payload.mertics)
             }
-            if (transferedData.command === 'options') {
-                console.log(transferedData.payload.options);
-                setOptions(transferedData.payload.options);
+            if (transferedData.command === 'services') {
+                console.log(transferedData.payload.ser);
+                setYmlData(transferedData.payload.services);
             }
         });
     }, [])
@@ -62,7 +64,8 @@ function Sidebar() {
 
     return (
         <div className={style.root}>
-            <SelectBox label="Select Option" options={options} onChange={(event) => setSelectedOption(event.target.value)} />
+            <SelectBox label="Select service" options={Object.keys(ymlData)} onChange={(event) => setSelectServices(event.target.value)} />
+            {selectService !== '' && <SelectBox label="Select Option" options={ymlData[selectService].options} onChange={(event) => setSelectedOption(event.target.value)} />}
             <Button className={style.btn} appearance="primary" onClick={handleSubmit}>Example</Button>
             <Table className={style.table} arial-label="Default table" style={{ minWidth: "510px" }}>
                 <TableHeader>

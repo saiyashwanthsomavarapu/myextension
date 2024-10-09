@@ -32,8 +32,9 @@ export const SelectBox = (props: SelectBoxProps) => {
             <div className={styles.field}>
                 <label htmlFor={selectId}>{label}</label>
                 <Select id={selectId} {...props}>
+                    <option value="">Select an option</option>
                     {options.map((option: string) => (
-                        <option key={option} value={option.toLowerCase()}>
+                        <option key={option} value={option}>
                             {option}
                         </option>
                     ))}

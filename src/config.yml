@@ -9,7 +9,7 @@ service:
       - equal
       - greater
       - less
-  dynatrace2:
+  balzmeter:
     options:
       - 1
       - 2
