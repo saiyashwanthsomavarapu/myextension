@@ -18,7 +18,7 @@ import { SelectBox } from './components/SelectBox';
 
 const styles = makeStyles({
     root: {
-        // backgroundColor: "var(--vscode-editor-background)",
+        backgroundColor: "var(--vscode-activityBar-background)",
         // color: "var(--vscode-editor-foreground)",
     },
     btn: {
@@ -32,14 +32,23 @@ const styles = makeStyles({
 
 function Sidebar() {
     const [metricsData, setMetricsData] = useState<any>([]);
-    const [option, setOption] = useState<string>('');
+    const [selectedOption, setSelectedOption] = useState<string>('');
+    const [options, setOptions] = useState<string[]>([]);
     const style = styles();
+    const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary-color');
+    const backgroundColor = getComputedStyle(document.body).getPropertyValue('--background-color');
+
 
     useEffect(() => {
         window.addEventListener('message', (event) => {
+            console.log(event.data);
             const transferedData = event.data;
             if (transferedData.command === 'sendData') {
                 setMetricsData(transferedData.payload.mertics)
+            }
+            if (transferedData.command === 'options') {
+                console.log(transferedData.payload.options);
+                setOptions(transferedData.payload.options);
             }
         });
     }, [])
@@ -47,13 +56,13 @@ function Sidebar() {
     const handleSubmit = () => {
         window.vscode.postMessage({
             command: 'fetchApiData',
-            payload: { metrics: metricsData, type: option },
+            payload: { metrics: metricsData, type: selectedOption },
         });
     }
 
     return (
         <div className={style.root}>
-            <SelectBox label="Select Option" options={["Max", "Min", "equal"]} onChange={(event) => setOption(event.target.value)} />
+            <SelectBox label="Select Option" options={options} onChange={(event) => setSelectedOption(event.target.value)} />
             <Button className={style.btn} appearance="primary" onClick={handleSubmit}>Example</Button>
             <Table className={style.table} arial-label="Default table" style={{ minWidth: "510px" }}>
                 <TableHeader>
@@ -82,7 +91,7 @@ function Sidebar() {
                             </TableCell>
                             <TableCell>
                                 <TableCellLayout>
-                                    {metrics.dimensionsMap['dt.entity.host']}
+                                    {metrics.dimensionMap['dt.entity.host']}
                                 </TableCellLayout>
                             </TableCell>
                             <TableCell>

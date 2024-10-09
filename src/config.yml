@@ -1,0 +1,23 @@
+greeting: "Hello from YAML"
+showWelcomeMessage: true
+maxResults: 10
+service:
+  dynatrace:
+    options:
+      - max
+      - min
+      - equal
+      - greater
+      - less
+  dynatrace2:
+    options:
+      - 1
+      - 2
+      - 3
+      - 4
+apiEndpoints:
+  dynatrace: "https://api.example.com/users"
+  dynatrace2: "https://api.example.com/posts"
+features:
+  enableNotifications: true
+  darkMode: false

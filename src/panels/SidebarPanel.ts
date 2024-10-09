@@ -1,15 +1,15 @@
-import { WebviewViewProvider, WebviewView, Uri, Disposable } from "vscode";
+import { WebviewViewProvider, WebviewView, Uri } from "vscode";
 import axios from "axios";
+import { readYAMLFile } from "../fileOperations";
 import { getUri, getNonce } from "../utils"; // Helper functions for nonce and URIs
 
 export class SidebarProvider implements WebviewViewProvider {
   private _view?: WebviewView;
+  public ymlData: any;
 
-  constructor(private readonly _extensionUri: Uri) {
-    this._fetchApiData("ax");
-  }
+  constructor(private readonly _extensionUri: Uri) {}
 
-  public resolveWebviewView(webviewView: WebviewView) {
+  public async resolveWebviewView(webviewView: WebviewView) {
     this._view = webviewView;
 
     // Allow scripts to run
@@ -24,8 +24,11 @@ export class SidebarProvider implements WebviewViewProvider {
     // Listen for messages from the webview (React UI)
     this._setMessageListener(webviewView.webview);
 
+    // Fetch API data
+    this.ymlData = await readYAMLFile(this._view.webview);
+
     // Automatically call the API when the sidebar is loaded
-    this._fetchApiData("default-query");
+    this._fetchApiData("max");
   }
 
   private _getWebviewContent(webview: any): string {
@@ -34,7 +37,7 @@ export class SidebarProvider implements WebviewViewProvider {
       "webview-ui",
       "sidebar.js", // Bundled React component
     ]);
-    // const styleUri = getUri(webview, this._extensionUri, ["media", "main.css"]);
+    const styleUri = getUri(webview, this._extensionUri, ["media", "main.css"]);
 
     const nonce = getNonce();
 
@@ -45,7 +48,7 @@ export class SidebarProvider implements WebviewViewProvider {
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${nonce}';">
-
+   
 
         </head>
         <body>
@@ -78,7 +81,7 @@ export class SidebarProvider implements WebviewViewProvider {
           data: [
             {
               dimensions: ["1", "2"],
-              dimensionsMap: {
+              dimensionMap: {
                 "dt.entity.host.name": "1",
                 "dt.entity.host": "2",
               },
@@ -87,7 +90,7 @@ export class SidebarProvider implements WebviewViewProvider {
             },
             {
               dimensions: ["1", "2"],
-              dimensionsMap: {
+              dimensionMap: {
                 "dt.entity.host.name": "1",
                 "dt.entity.host": "2",
               },
@@ -96,7 +99,7 @@ export class SidebarProvider implements WebviewViewProvider {
             },
             {
               dimensions: ["1", "2"],
-              dimensionsMap: {
+              dimensionMap: {
                 "dt.entity.host.name": "1",
                 "dt.entity.host": "2",
               },
@@ -105,7 +108,7 @@ export class SidebarProvider implements WebviewViewProvider {
             },
             {
               dimensions: ["1", "2"],
-              dimensionsMap: {
+              dimensionMap: {
                 "dt.entity.host.name": "1",
                 "dt.entity.host": "2",
               },

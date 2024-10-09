@@ -13,11 +13,21 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "config.yamlFilePath": {
+          "type": "string",
+          "default": "",
+          "description": "The path to the YAML configuration file within the workspace"
+        }
+      }
+    },
     "viewsContainers": {
       "activitybar": [
         {
           "id": "higway-sidebar-view",
-          "title": "HIGWAY",
+          "title": "Nudge",
           "icon": "media/productivity-expert-icon.svg"
         }
       ]
@@ -27,22 +37,20 @@
         {
           "type": "webview",
           "id": "higway-sidebar",
-          "name": "HIGWAY",
-          "icon": "media/heproductivity-expert-iconart.svg",
-          "contextualTitle": "HIGWAY"
+          "name": "Nudge",
+          "icon": "media/productivity-expert-iconart.svg",
+          "contextualTitle": "Nudge"
         }
       ]
     },
     "commands": [
       {
-        "command": "HIGWAY.getByMax",
-        "title": "Get By Max Value",
-        "category": "TODO"
+        "command": "nudge.selectYAMLFile",
+        "title": "Select YAML File from Workspace"
       },
       {
-        "command": "HIGWAY.run",
-        "title": "Todo",
-        "category": "TODO"
+        "command": "myExtension.readYAMLFile",
+        "title": "Read YAML File"
       },
       {
         "command": "HIGWAY.helloWorld",
@@ -98,9 +106,11 @@
     "vite": "^5.4.8"
   },
   "dependencies": {
+    "@fluentui/react": "^8.121.2",
     "@fluentui/react-components": "^9.54.17",
     "axios": "^1.7.7",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "yaml": "^2.5.1"
   }
 }
