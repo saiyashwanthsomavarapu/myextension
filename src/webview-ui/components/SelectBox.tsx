@@ -1,9 +1,13 @@
 import { makeStyles, Select, tokens, useId } from "@fluentui/react-components";
 import type { SelectProps } from "@fluentui/react-components";
 
+interface IOption {
+    label: string;
+    value: string;
+}
 interface SelectBoxProps extends SelectProps {
     label: string;
-    options: string[];
+    options: IOption[];
 }
 
 const useStyles = makeStyles({
@@ -33,9 +37,9 @@ export const SelectBox = (props: SelectBoxProps) => {
                 <label htmlFor={selectId}>{label}</label>
                 <Select id={selectId} {...props}>
                     <option value="">Select an option</option>
-                    {options.map((option: string) => (
-                        <option key={option} value={option}>
-                            {option}
+                    {options.map((option: IOption, index: number) => (
+                        <option key={index} value={option.value}>
+                            {option.label}
                         </option>
                     ))}
                 </Select>

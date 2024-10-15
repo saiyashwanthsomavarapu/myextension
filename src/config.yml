@@ -1,20 +1,18 @@
-greeting: "Hello from YAML"
-showWelcomeMessage: true
-maxResults: 10
-service:
+extension: "nudge"
+userid: 123
+serviceNames:
   dynatrace:
-    options:
-      - max
-      - min
-      - equal
-      - greater
-      - less
+    commands:
+      - commandName: "Top 5 responses by application"
+        queryString: "builtin:service.response.client:splitBy('dt.entity.service'):max:limit(5):fold(max):names"
+      - commandName: "Top 3 CPU usage by application"
+        queryString: "builtin:service.response.client:splitBy('dt.entity.service'):max:limit(3):fold(max):names"
   balzmeter:
-    options:
-      - 1
-      - 2
-      - 3
-      - 4
+    commands:
+      - commandName: "Top 5 responses by application"
+        queryString: "builtin:service.response.client:splitBy('dt.entity.service'):max:limit(5):fold(max):names"
+      - commandName: "Top 3 CPU usage by application"
+        queryString: "builtin:service.response.client:splitBy('dt.entity.service'):max:limit(3):fold(max):names"
 apiEndpoints:
   dynatrace: "https://api.example.com/users"
   dynatrace2: "https://api.example.com/posts"

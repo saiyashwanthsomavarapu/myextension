@@ -77,13 +77,14 @@ export class SidebarProvider implements WebviewViewProvider {
     webview.onDidReceiveMessage((message: any) => {
       const command = message.command;
       if (command === "fetchApiData") {
-        this._fetchApiData(message.payload.type); // Handle API request from React
+        this._fetchApiData(message.payload); // Handle API request from React
       }
     });
   }
 
   // Axios call to fetch data
-  private async _fetchApiData(query: string) {
+  private async _fetchApiData(query: any) {
+    console.log(query);
     const data = {
       result: [
         {

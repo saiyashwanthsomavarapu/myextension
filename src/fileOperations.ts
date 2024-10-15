@@ -29,7 +29,10 @@ export async function readYAMLFile(webview: Webview) {
       setTimeout(() => {
         webview.postMessage({
           command: "services",
-          payload: { services: data.service },
+          payload: {
+            services: data.serviceNames,
+            apiEndpoints: data.apiEndpoints,
+          },
         });
       }, 1000);
 

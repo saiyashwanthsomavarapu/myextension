@@ -35,7 +35,7 @@ function Sidebar() {
     const [ymlData, setYmlData] = useState<any>([]);
     const [selectedOption, setSelectedOption] = useState<string>('');
     const [selectService, setSelectServices] = useState<string>('');
-    const [options, setOptions] = useState<string[]>([]);
+    const [apiEndpoints, setApiEndpoints] = useState<{ [key: string]: string }>({});
     const style = styles();
     const primaryColor = getComputedStyle(document.body).getPropertyValue('--primary-color');
     const backgroundColor = getComputedStyle(document.body).getPropertyValue('--background-color');
@@ -49,7 +49,7 @@ function Sidebar() {
                 setMetricsData(transferedData.payload.mertics)
             }
             if (transferedData.command === 'services') {
-                console.log(transferedData.payload.ser);
+                setApiEndpoints(transferedData.payload.apiEndpoints);
                 setYmlData(transferedData.payload.services);
             }
         });
@@ -58,14 +58,14 @@ function Sidebar() {
     const handleSubmit = () => {
         window.vscode.postMessage({
             command: 'fetchApiData',
-            payload: { metrics: metricsData, type: selectedOption },
+            payload: { metrics: metricsData, apiQuery: apiEndpoints[selectService] + selectedOption, queryString: selectedOption },
         });
     }
 
     return (
         <div className={style.root}>
-            <SelectBox label="Select service" options={Object.keys(ymlData)} onChange={(event) => setSelectServices(event.target.value)} />
-            {selectService !== '' && <SelectBox label="Select Option" options={ymlData[selectService].options} onChange={(event) => setSelectedOption(event.target.value)} />}
+            <SelectBox label="Select service" options={Object.keys(ymlData).map((key) => ({ label: key, value: key }))} onChange={(event) => setSelectServices(event.target.value)} />
+            {selectService !== '' && <SelectBox label="Select command" options={ymlData[selectService].commands.map((command: any) => ({ label: command.commandName, value: command.queryString }))} onChange={(event) => setSelectedOption(event.target.value)} />}
             <Button className={style.btn} appearance="primary" onClick={handleSubmit}>Example</Button>
             <Table className={style.table} arial-label="Default table" style={{ minWidth: "510px" }}>
                 <TableHeader>
