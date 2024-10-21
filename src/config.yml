@@ -7,15 +7,10 @@ serviceNames:
         queryString: "builtin:service.response.client:splitBy('dt.entity.service'):max:limit(5):fold(max):names"
       - commandName: "Top 3 CPU usage by application"
         queryString: "builtin:service.response.client:splitBy('dt.entity.service'):max:limit(3):fold(max):names"
-  balzmeter:
-    commands:
-      - commandName: "Top 5 responses by application"
-        queryString: "builtin:service.response.client:splitBy('dt.entity.service'):max:limit(5):fold(max):names"
-      - commandName: "Top 3 CPU usage by application"
-        queryString: "builtin:service.response.client:splitBy('dt.entity.service'):max:limit(3):fold(max):names"
+  balzemeter:
+    requestInput:
+      input: workspacId
+      input: projectId
 apiEndpoints:
-  dynatrace: "https://api.example.com/users"
-  dynatrace2: "https://api.example.com/posts"
-features:
-  enableNotifications: true
-  darkMode: false
+  dynatrace: "https://dev.nudgegenai.mlc.cld1np.thehartford.com/dynatrace"
+  balzemeter: "https://dev.nudgegenai.mlc.cld1np.thehartford.com.blazemeter"
