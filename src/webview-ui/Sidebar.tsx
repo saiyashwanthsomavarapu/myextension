@@ -76,7 +76,7 @@ function Sidebar() {
                     metrics: metricsData,
                     apiQuery: apiEndpoints[selectService],
                     queryString: {
-                        query: selectedOption,
+                        metricsSelector: selectedOption,
                     }
                 },
             });
