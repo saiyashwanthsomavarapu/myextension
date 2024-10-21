@@ -28,7 +28,7 @@ export class SidebarProvider implements WebviewViewProvider {
     this.ymlData = await readYAMLFile(this._view.webview);
 
     // Automatically call the API when the sidebar is loaded
-    this._fetchApiData("max");
+    // this._fetchApiData("max");
   }
 
   public async refresh() {
@@ -57,8 +57,6 @@ export class SidebarProvider implements WebviewViewProvider {
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${nonce}';">
-   
-
         </head>
         <body>
           <div id="root"></div>
@@ -83,65 +81,29 @@ export class SidebarProvider implements WebviewViewProvider {
   }
 
   // Axios call to fetch data
-  private async _fetchApiData(query: any) {
-    console.log(query);
-    const data = {
-      result: [
-        {
-          data: [
-            {
-              dimensions: ["1", "2"],
-              dimensionMap: {
-                "dt.entity.host.name": "1",
-                "dt.entity.host": "2",
-              },
-              timestamps: ["234343"],
-              values: [33.96],
-            },
-            {
-              dimensions: ["1", "2"],
-              dimensionMap: {
-                "dt.entity.host.name": "1",
-                "dt.entity.host": "2",
-              },
-              timestamps: ["234343"],
-              values: [33.96],
-            },
-            {
-              dimensions: ["1", "2"],
-              dimensionMap: {
-                "dt.entity.host.name": "1",
-                "dt.entity.host": "2",
-              },
-              timestamps: ["234343"],
-              values: [33.96],
-            },
-            {
-              dimensions: ["1", "2"],
-              dimensionMap: {
-                "dt.entity.host.name": "1",
-                "dt.entity.host": "2",
-              },
-              timestamps: ["234343"],
-              values: [33.96],
-            },
-          ],
-        },
-      ],
-    };
-    try {
-      //   const response = await axios.get(
-      //     `https://api.example.com/data?q=${query}`
-      //   );
-      // Send the data back to the React component
+  private async _fetchApiData(apiCall: any) {
+    console.log(apiCall);
 
+    try {
+      const config = {
+        method: "post",
+        maxBodyLength: Infinity,
+        url: apiCall.apiQuery,
+        headers: {
+          Authorization: ``,
+        },
+        data: apiCall.queryString,
+      };
+      const response = await axios.request(config);
+
+      // Send the data back to the React component
       setTimeout(() => {
         this._view?.webview.postMessage({
           command: "sendData",
-          payload: { mertics: data.result[0].data, type: query },
+          payload: { mertics: response.data.data },
         });
       }, 1000);
-      console.log("API Response:", data.result[0].data);
+      console.log("API Response:", response.data.data);
     } catch (error) {
       console.error("Error fetching API data:", error);
     }
