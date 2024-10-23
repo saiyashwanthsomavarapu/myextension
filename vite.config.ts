@@ -9,6 +9,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         sidebar: path.resolve(__dirname, "src/webview-ui/Sidebar.tsx"),
+        chatlayout: path.resolve(__dirname, "src/webview-ui/ChatLayout.tsx"),
       },
       output: {
         entryFileNames: `[name].js`,

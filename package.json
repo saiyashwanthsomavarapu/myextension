@@ -40,6 +40,13 @@
           "name": "Nudge",
           "icon": "media/productivity-expert-iconart.svg",
           "contextualTitle": "Nudge"
+        },
+        {
+          "type": "webview",
+          "id": "chat-layout",
+          "name": "Chat Layout",
+          "icon": "media/productivity-expert-iconart.svg",
+          "contextualTitle": "Nudge"
         }
       ]
     },
@@ -47,35 +54,6 @@
       {
         "command": "nudge.selectYAMLFile",
         "title": "Select YAML File from Workspace"
-      },
-      {
-        "command": "myExtension.readYAMLFile",
-        "title": "Read YAML File"
-      },
-      {
-        "command": "HIGWAY.helloWorld",
-        "title": "Hello World",
-        "category": "HIGWAY"
-      },
-      {
-        "title": "First Command",
-        "command": "HIGWAY.FirstCommand",
-        "category": "HIGWAY"
-      },
-      {
-        "title": "Scan Document",
-        "command": "HIGWAY.ScanDocument",
-        "category": "HIGWAY"
-      },
-      {
-        "title": "Prompt Test",
-        "command": "HIGWAY.PromptTest",
-        "category": "HIGWAY"
-      },
-      {
-        "title": "Terminal Test",
-        "command": "HIGWAY.TerminalTest",
-        "category": "HIGWAY"
       }
     ]
   },
@@ -108,6 +86,7 @@
   "dependencies": {
     "@fluentui/react": "^8.121.2",
     "@fluentui/react-components": "^9.54.17",
+    "@fluentui/react-list-preview": "^0.3.9",
     "axios": "^1.7.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
