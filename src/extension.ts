@@ -2,17 +2,21 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
 import { ExtensionContext, Disposable } from "vscode";
-import { SidebarProvider } from "./panels/SidebarPanel";
-import { selectYAMLFilePath } from "fileOperations";
+import { SidebarPanel1 } from "./panels/Sidebar/Panel1";
+import { selectYAMLFilePath } from "./fileOperations";
+import { SidebarPanel2 } from "./panels/Sidebar/Panel2";
 
 let disposables: Disposable[] = [];
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 export function activate(context: ExtensionContext) {
   // Sidebar view
-  const sidebarProvider = new SidebarProvider(context.extensionUri);
+  const sidebarPanel1 = new SidebarPanel1(context.extensionUri);
+  const sidebarPanel2 = new SidebarPanel2(context.extensionUri);
   context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider("higway-sidebar", sidebarProvider)
+    vscode.window.registerWebviewViewProvider("higway-sidebar", sidebarPanel1)
+  );
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider("chat-layout", sidebarPanel2)
   );
 
   // Select yml file path
@@ -24,7 +28,7 @@ export function activate(context: ExtensionContext) {
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("config.yamlFilePath")) {
         // Refresh the sidebar when the YAML file path is modified
-        sidebarProvider.refresh();
+        sidebarPanel1.refresh();
       }
     })
   );

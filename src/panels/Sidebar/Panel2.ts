@@ -1,9 +1,9 @@
 import { WebviewViewProvider, WebviewView, Uri, window } from "vscode";
 import axios from "axios";
-import { readYAMLFile } from "../fileOperations";
-import { getUri, getNonce } from "../utils"; // Helper functions for nonce and URIs
+import { readYAMLFile } from "../../fileOperations";
+import { getUri, getNonce } from "../../utils"; // Helper functions for nonce and URIs
 
-export class SidebarProvider implements WebviewViewProvider {
+export class SidebarPanel2 implements WebviewViewProvider {
   private _view?: WebviewView;
   public ymlData: any;
 
@@ -44,7 +44,7 @@ export class SidebarProvider implements WebviewViewProvider {
     const scriptUri = getUri(webview, this._extensionUri, [
       "out",
       "webview-ui",
-      "sidebar.js", // Bundled React component
+      "chatlayout.js", // Bundled React component
     ]);
     const styleUri = getUri(webview, this._extensionUri, ["media", "main.css"]);
 
@@ -64,7 +64,7 @@ export class SidebarProvider implements WebviewViewProvider {
             const vscode = acquireVsCodeApi();
             window.vscode = vscode;
           </script>
-          <script src="${scriptUri}" nonce="${nonce}"></script>
+          <script type="module" src="${scriptUri}" nonce="${nonce}"></script>
         </body>
       </html>
     `;
@@ -82,8 +82,6 @@ export class SidebarProvider implements WebviewViewProvider {
 
   // Axios call to fetch data
   private async _fetchApiData(apiCall: any) {
-    console.log(apiCall);
-
     try {
       const config = {
         method: "post",

@@ -1,4 +1,4 @@
-:root {
+/* :root {
     --container-paddding: 20px;
     --input-padding-vertical: 6px;
     --input-padding-horizontal: 4px;
@@ -7,6 +7,64 @@
     --vscode-editor-background: var(--vscode-editor-background, #1e1e1e);
     --vscode-editor-foreground: var(--vscode-editor-foreground, #d4d4d4);
     --vscode-button-background: var(--vscode-button-background, #007acc);
+} */
+/* 
+General Colors
+--vscode-editor-background
+--vscode-editor-foreground
+--vscode-editor-lineHighlightBackground
+--vscode-editor-selectionBackground
+--vscode-editor-selectionForeground
+--vscode-editor-wordHighlightBackground
+--vscode-editor-wordHighlightStrongBackground
+--vscode-editor-findMatchBackground
+--vscode-editor-findMatchHighlightBackground
+Input and Button Colors
+
+--vscode-input-background
+--vscode-input-foreground
+--vscode-input-border
+--vscode-input-placeholderForeground
+--vscode-button-background
+--vscode-button-foreground
+--vscode-button-hoverBackground
+--vscode-button-secondaryBackground
+--vscode-button-secondaryForeground
+Panel and Sidebar Colors
+
+--vscode-panel-background
+--vscode-panel-border
+--vscode-sidebar-background
+--vscode-sidebar-foreground
+--vscode-sidebar-border
+Text Colors
+
+--vscode-textLinkForeground
+--vscode-textLinkActiveForeground
+--vscode-textBlockQuoteBackground
+--vscode-textBlockQuoteBorder
+Warning and Error Colors
+
+--vscode-errorForeground
+--vscode-warningForeground
+--vscode-infoForeground
+Debug Colors
+
+--vscode-debugToolBarBackground
+--vscode-debugExceptionBackground
+--vscode-debugExceptionForeground
+Git Colors
+
+--vscode-gitDecoration-addedResourceForeground
+--vscode-gitDecoration-modifiedResourceForeground
+--vscode-gitDecoration-removedResourceForeground */
+:root {
+    --chat-input-background: var(--vscode-input-background);
+    --chat-input-foreground: var(--vscode-input-foreground);
+    --chat-input-border: var(--vscode-input-border);
+    --chat-button-background: var(--vscode-button-background);
+    --chat-button-foreground: var(--vscode-button-foreground);
+    --chat-button-hover-background: var(--vscode-button-hoverBackground);
 }
 
 body {
