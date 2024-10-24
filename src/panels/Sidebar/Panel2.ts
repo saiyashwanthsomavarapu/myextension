@@ -3,6 +3,14 @@ import axios from "axios";
 import { readYAMLFile } from "../../fileOperations";
 import { getUri, getNonce } from "../../utils"; // Helper functions for nonce and URIs
 
+interface IApiParams {
+  apiQuery: string;
+  serviceName: string;
+  queryString: {
+    [key: string]: string;
+  };
+}
+
 export class SidebarPanel2 implements WebviewViewProvider {
   private _view?: WebviewView;
   public ymlData: any;
@@ -81,7 +89,7 @@ export class SidebarPanel2 implements WebviewViewProvider {
   }
 
   // Axios call to fetch data
-  private async _fetchApiData(apiCall: any) {
+  private async _fetchApiData(apiCall: IApiParams) {
     try {
       const config = {
         method: "post",
@@ -98,7 +106,10 @@ export class SidebarPanel2 implements WebviewViewProvider {
       setTimeout(() => {
         this._view?.webview.postMessage({
           command: "sendData",
-          payload: { mertics: response.data.data },
+          payload: {
+            metrics: response.data.data,
+            serviceName: apiCall.serviceName,
+          },
         });
       }, 1000);
       console.log("API Response:", response.data.data);

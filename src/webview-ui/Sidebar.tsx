@@ -42,7 +42,7 @@ function Sidebar() {
     const [ymlData, setYmlData] = useState<any>([]);
     const [selectedOption, setSelectedOption] = useState<string>("");
     const [selectService, setSelectServices] = useState<string>("");
-    const [balzemeterValue, setBalzemeterValue] = useState<{
+    const [blazemeterValue, setBlazemeterValue] = useState<{
         projectId: string;
         workspaceId: string;
     }>({ projectId: '', workspaceId: '' });
@@ -90,16 +90,16 @@ function Sidebar() {
             });
             setSelectedOption('');
         }
-        if (selectService === "balzemeter") {
+        if (selectService === "blazemeter") {
             window.vscode.postMessage({
                 command: "fetchApiData",
                 payload: {
                     metrics: metricsData,
                     apiQuery: apiEndpoints[selectService],
-                    queryString: balzemeterValue,
+                    queryString: blazemeterValue,
                 },
             });
-            setBalzemeterValue({ projectId: '', workspaceId: '' });
+            setBlazemeterValue({ projectId: '', workspaceId: '' });
         };
 
     }
@@ -109,10 +109,10 @@ function Sidebar() {
         setMetricsData([]);
     }
 
-    const isBalzemeterValid = Object.values(balzemeterValue).every(value => value.trim() !== '');
+    const isBlazemeterValid = Object.values(blazemeterValue).every(value => value.trim() !== '');
     const isDynatraceValid = selectedOption.trim() !== '';
 
-    const isSubmitDisabled = selectService === "balzemeter" ? !isBalzemeterValid : selectService === "dynatrace" ? !isDynatraceValid : true;
+    const isSubmitDisabled = selectService === "blazemeter" ? !isBlazemeterValid : selectService === "dynatrace" ? !isDynatraceValid : true;
 
     return (
         <div className={style.root}>
@@ -134,7 +134,7 @@ function Sidebar() {
                     onChange={(event) => setSelectedOption(event.target.value)}
                 />
             )}
-            {selectService === "balzemeter" &&
+            {selectService === "blazemeter" &&
                 ymlData[selectService].requestInput.map((input: string) => (
                     <div className={rootStyle.base}>
                         <div className={rootStyle.field} key={input}>
@@ -143,8 +143,8 @@ function Sidebar() {
                                 placeholder={input}
                                 name={input}
                                 onChange={(event) =>
-                                    setBalzemeterValue({
-                                        ...balzemeterValue,
+                                    setBlazemeterValue({
+                                        ...blazemeterValue,
                                         [input]: event.target.value,
                                     })
                                 }

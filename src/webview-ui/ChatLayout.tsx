@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Button, webDarkTheme, FluentProvider, Input, makeStyles } from '@fluentui/react-components';
+import React, { useEffect, useState } from 'react';
+import { Button, FluentProvider, Input, makeStyles, RadioGroupOnChangeData, webDarkTheme } from '@fluentui/react-components';
 import { SendRegular } from '@fluentui/react-icons';
-import { List, ListItem } from '@fluentui/react-list-preview'; // For rendering suggestions
+import { List, ListItem } from '@fluentui/react-list-preview';
 import { createRoot } from 'react-dom/client';
-import "./main.css";
+import { apiRequest } from './utils';
+import Messages from './components/Messages';
 
 const useStyles = makeStyles({
     root: {
@@ -12,7 +13,7 @@ const useStyles = makeStyles({
         left: "10px",
         right: "10px",
         display: "flex",
-        flexDirection: "column-reverse", // Reversed the order to show suggestions above input
+        flexDirection: "column",
         gap: "10px",
         padding: "10px",
         backgroundColor: "var(--vscode-panel-background)",
@@ -45,9 +46,9 @@ const useStyles = makeStyles({
         borderRadius: "4px",
         padding: "5px",
         zIndex: 1000,
-        position: "absolute", // Make suggestions absolute for better control
-        bottom: "45px", // Adjust based on input position
-        left: "10px", // Align with input field
+        position: "absolute",
+        bottom: "50px", // Positioned just above the input box
+        left: "10px",
         right: "10px",
     },
     suggestionItem: {
@@ -59,12 +60,46 @@ const useStyles = makeStyles({
     },
 });
 
+interface IMessage {
+    text?: string;
+    sender: 'user' | 'bot';
+    type: string;
+    options?: Array<any>;
+}
+
 const ChatLayout = () => {
     const classes = useStyles();
+    const [metricsData, setMetricsData] = useState<any>([]);
+    const [ymlData, setYmlData] = useState<any>([]);
+    const [apiEndpoints, setApiEndpoints] = useState<{ [key: string]: string }>(
+        {}
+    );
     const [inputValue, setInputValue] = useState('');
+    const [messages, setMessages] = useState<IMessage[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const [suggestions] = useState(['Dynatrace', 'BlazeMeter']);
+    const [suggestions] = useState(['dynatrace', 'blazemeter']);
+    const [selectedService, setSelectedService] = useState<string>('');
     const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
+
+    useEffect(() => {
+        window.addEventListener("message", (event) => {
+            console.log("transformation:", event.data);
+            const { command, payload } = event.data;
+            if (command === "sendData") {
+                setMetricsData(payload.metrics);
+                setMessages((prevMessages) => [...prevMessages, {
+                    sender: 'bot',
+                    type: 'table',
+                    text: payload.serviceName,
+                    options: payload.metrics
+                }]);
+            }
+            if (command === "services") {
+                setApiEndpoints(payload.apiEndpoints);
+                setYmlData(payload.services);
+            }
+        });
+    }, []);
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
@@ -83,6 +118,52 @@ const ChatLayout = () => {
         }
     };
 
+    const handleSendMessage = () => {
+        const currentValue = inputValue.slice(1);
+        const newUserMessage: IMessage = {
+            sender: 'user',
+            type: 'text',
+            text: inputValue.trim(),
+        };
+        setMessages((prevMessages) => [...prevMessages, newUserMessage]);
+        setInputValue('');
+        setShowSuggestions(false);
+        if (suggestions.includes(currentValue)) {
+            setSelectedService(currentValue);
+            if (newUserMessage.text === '@dynatrace') {
+                setMessages((prevMessages) => [...prevMessages, {
+                    sender: 'bot',
+                    type: 'radio',
+                    text: inputValue.slice(1),
+                    options: ymlData.dynatrace.commands,
+                }])
+                return;
+            }
+
+            if (newUserMessage.text === '@blazemeter') {
+                setMessages((prevMessages) => [...prevMessages, {
+                    sender: 'bot',
+                    type: 'text',
+                    text: `Enter the following parameters: ${ymlData.blazemeter.requestInput.join(',')} with comma separated values`
+                }])
+            }
+        } else {
+            if (selectedService === 'blazemeter') {
+                const value = inputValue.split(',').map(item => item.trim());
+                apiRequest(
+                    {
+                        apiQuery: apiEndpoints[selectedService],
+                        serviceName: selectedService,
+                        queryString: {
+                            workspaceId: value[0],
+                            projectId: value[1],
+                        }
+                    }
+                )
+            }
+        }
+    };
+
     const handleSuggestionClick = (suggestion: string) => {
         const atIndex = inputValue.lastIndexOf('@');
         const newValue = inputValue.slice(0, atIndex + 1) + suggestion;
@@ -90,25 +171,37 @@ const ChatLayout = () => {
         setShowSuggestions(false);
     };
 
+    const handleRadioChange = (_: React.FormEvent<HTMLDivElement>, data: RadioGroupOnChangeData) => {
+        if (selectedService === 'dynatrace') {
+            console.log(data.value, apiEndpoints);
+            const value = ymlData.dynatrace.commands.find((command: { commandName: string; }) => command.commandName === data.value);
+            setMessages((prevMessages) => [...prevMessages, {
+                sender: 'user',
+                type: 'text',
+                text: data.value
+            }]);
+            apiRequest({
+                apiQuery: apiEndpoints[selectedService],
+                serviceName: selectedService,
+                queryString: {
+                    metricsSelector: value?.queryString ?? ''
+                }
+            });
+        }
+    };
+
+
     return (
         <div className={classes.root}>
-            {/* Show suggestions above input if applicable */}
+            {/* Chat messages window */}
+            <Messages messages={messages} handleRadio={handleRadioChange} />
+
+            {/* Show suggestions if applicable */}
             {showSuggestions && filteredSuggestions.length > 0 && (
-                <div className={classes.suggestions}>
-                    <List>
-                        {filteredSuggestions.map((suggestion) => (
-                            <ListItem
-                                key={suggestion}
-                                className={classes.suggestionItem}
-                                onClick={() => handleSuggestionClick(suggestion)}
-                            >
-                                {suggestion}
-                            </ListItem>
-                        ))}
-                    </List>
-                </div>
+                <Suggestions suggestions={filteredSuggestions} handleSuggestionClick={handleSuggestionClick} />
             )}
 
+            {/* Input box and send button */}
             <div className={classes.inputWrapper}>
                 <Input
                     name="chatInput"
@@ -117,13 +210,37 @@ const ChatLayout = () => {
                     value={inputValue}
                     onChange={handleInputChange}
                 />
-                <Button className={classes.btn} appearance="primary" icon={<SendRegular />} />
+                <Button className={classes.btn} disabled={!inputValue} appearance="primary" icon={<SendRegular />} onClick={handleSendMessage} />
             </div>
         </div>
     );
 };
 
-export default ChatLayout;
+interface ISuggestionProps {
+    suggestions: string[];
+    handleSuggestionClick: (suggestion: string) => void;
+}
+
+const Suggestions = (props: ISuggestionProps) => {
+    const { suggestions, handleSuggestionClick } = props;
+    const classes = useStyles();
+    return (
+        <div className={classes.suggestions}>
+            <List>
+                {suggestions.map((suggestion) => (
+                    <ListItem
+                        key={suggestion}
+                        className={classes.suggestionItem}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                        {suggestion}
+                    </ListItem>
+                ))}
+            </List>
+        </div>
+    );
+}
+
 
 createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
