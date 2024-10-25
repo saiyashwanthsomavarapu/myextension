@@ -29,6 +29,7 @@ export function activate(context: ExtensionContext) {
       if (e.affectsConfiguration("config.yamlFilePath")) {
         // Refresh the sidebar when the YAML file path is modified
         sidebarPanel1.refresh();
+        sidebarPanel2.refresh();
       }
     })
   );

@@ -61,13 +61,20 @@ function Sidebar() {
     );
 
     useEffect(() => {
+        const savedState = window.vscode.getState();
+        console.log('useState', savedState)
+        if (savedState) {
+            setYmlData(savedState.services);
+            setApiEndpoints(savedState.apiEndpoints);
+        }
         window.addEventListener("message", (event) => {
             console.log("transformation:", event.data);
             const { command, payload } = event.data;
             if (command === "sendData") {
-                setMetricsData(payload.mertics);
+                setMetricsData(payload.metrics);
             }
             if (command === "services") {
+                window.vscode.setState(payload);
                 setApiEndpoints(payload.apiEndpoints);
                 setYmlData(payload.services);
             }

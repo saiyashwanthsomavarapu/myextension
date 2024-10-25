@@ -100,7 +100,7 @@ export class SidebarPanel1 implements WebviewViewProvider {
       setTimeout(() => {
         this._view?.webview.postMessage({
           command: "sendData",
-          payload: { mertics: response.data.data },
+          payload: { metrics: response.data.data },
         });
       }, 1000);
       console.log("API Response:", response.data.data);

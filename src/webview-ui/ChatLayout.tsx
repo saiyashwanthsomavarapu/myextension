@@ -82,6 +82,13 @@ const ChatLayout = () => {
     const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
 
     useEffect(() => {
+        const savedState = window.vscode.getState();
+        console.log('useState', savedState)
+        if (savedState) {
+            setYmlData(savedState.services);
+            setApiEndpoints(savedState.apiEndpoints);
+        }
+
         window.addEventListener("message", (event) => {
             console.log("transformation:", event.data);
             const { command, payload } = event.data;
@@ -95,10 +102,14 @@ const ChatLayout = () => {
                 }]);
             }
             if (command === "services") {
+                window.vscode.setState(payload);
                 setApiEndpoints(payload.apiEndpoints);
                 setYmlData(payload.services);
             }
         });
+        return () => {
+            window.removeEventListener('message', () => { });
+        };
     }, []);
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,3 +260,4 @@ createRoot(document.getElementById("root")!).render(
         </FluentProvider>
     </React.StrictMode>
 );
+

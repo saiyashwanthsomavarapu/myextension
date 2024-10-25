@@ -1,4 +1,4 @@
-import { WebviewViewProvider, WebviewView, Uri, window } from "vscode";
+import { WebviewViewProvider, WebviewView, Uri, window, Webview } from "vscode";
 import axios from "axios";
 import { readYAMLFile } from "../../fileOperations";
 import { getUri, getNonce } from "../../utils"; // Helper functions for nonce and URIs
@@ -33,10 +33,20 @@ export class SidebarPanel2 implements WebviewViewProvider {
     this._setMessageListener(webviewView.webview);
 
     // Fetch API data
-    this.ymlData = await readYAMLFile(this._view.webview);
+    this.ymlData = await this._loadYAMLData();
 
     // Automatically call the API when the sidebar is loaded
     // this._fetchApiData("max");
+  }
+
+  private async _loadYAMLData() {
+    try {
+      const data = await readYAMLFile(this._view?.webview ?? ({} as Webview));
+      return data;
+    } catch (error: any) {
+      window.showErrorMessage("Failed to load YAML data: " + error.message);
+      return null;
+    }
   }
 
   public async refresh() {
