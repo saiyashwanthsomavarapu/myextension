@@ -71,6 +71,13 @@ const ChatLayout = () => {
     const classes = useStyles();
     const [metricsData, setMetricsData] = useState<any>([]);
     const [ymlData, setYmlData] = useState<any>([]);
+    const [dynatraceValues, setDynatraceValues] = useState<{
+        query: string;
+        appId: string
+    }>({
+        query: "",
+        appId: ""
+    })
     const [apiEndpoints, setApiEndpoints] = useState<{ [key: string]: string }>(
         {}
     );
@@ -90,7 +97,7 @@ const ChatLayout = () => {
         }
 
         window.addEventListener("message", (event) => {
-            console.log("transformation:", event.data);
+            console.log("chat:", event.data);
             const { command, payload } = event.data;
             if (command === "sendData") {
                 setMetricsData(payload.metrics);
@@ -172,6 +179,27 @@ const ChatLayout = () => {
                     }
                 )
             }
+
+            if (selectedService === 'dynatrace') {
+                const value = ymlData.dynatrace.commands.find((command: { commandName: string; }) => command.commandName === dynatraceValues.query);
+                setMessages((prevMessages) => [...prevMessages, {
+                    sender: 'user',
+                    type: 'text',
+                    text: value
+                }])
+                setDynatraceValues({
+                    ...dynatraceValues,
+                    appId: inputValue
+                })
+                apiRequest({
+                    apiQuery: apiEndpoints[selectedService],
+                    serviceName: selectedService,
+                    queryString: {
+                        metricsSelector: dynatraceValues.query.replace('$$$', inputValue),
+                        dimensionName: value.dimensionName
+                    }
+                });
+            }
         }
     };
 
@@ -189,15 +217,19 @@ const ChatLayout = () => {
             setMessages((prevMessages) => [...prevMessages, {
                 sender: 'user',
                 type: 'text',
-                text: data.value
-            }]);
-            apiRequest({
-                apiQuery: apiEndpoints[selectedService],
-                serviceName: selectedService,
-                queryString: {
-                    metricsSelector: value?.queryString ?? ''
-                }
-            });
+                text: data?.value ?? ''
+            },
+            {
+                sender: 'bot',
+                type: 'text',
+                text: 'Enter the App Id:'
+            }
+            ]);
+            setDynatraceValues({
+                ...dynatraceValues,
+                query: value?.queryString ?? ''
+            })
+
         }
     };
 

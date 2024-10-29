@@ -40,7 +40,13 @@ const styles = makeStyles({
 function Sidebar() {
     const [metricsData, setMetricsData] = useState<any>([]);
     const [ymlData, setYmlData] = useState<any>([]);
-    const [selectedOption, setSelectedOption] = useState<string>("");
+    const [dynatraceValues, setDynatraceValues] = useState<{
+        query: string;
+        appId: string
+    }>({
+        query: "",
+        appId: ""
+    });
     const [selectService, setSelectServices] = useState<string>("");
     const [blazemeterValue, setBlazemeterValue] = useState<{
         projectId: string;
@@ -85,23 +91,28 @@ function Sidebar() {
     const handleSubmit = () => {
         setLoading(true);
         if (selectService === "dynatrace") {
+            const value = ymlData.dynatrace.commands.find((command: { queryString: string; }) => command.queryString === dynatraceValues.query);
             window.vscode.postMessage({
                 command: "fetchApiData",
                 payload: {
-                    metrics: metricsData,
+                    serviceName: selectService,
                     apiQuery: apiEndpoints[selectService],
                     queryString: {
-                        metricsSelector: selectedOption,
+                        metricsSelector: dynatraceValues.query.replace('$$$', dynatraceValues.appId),
+                        dimensionName: value.dimensionName
                     }
                 },
             });
-            setSelectedOption('');
+            setDynatraceValues({
+                query: "",
+                appId: ""
+            });
         }
         if (selectService === "blazemeter") {
             window.vscode.postMessage({
                 command: "fetchApiData",
                 payload: {
-                    metrics: metricsData,
+                    serviceName: selectService,
                     apiQuery: apiEndpoints[selectService],
                     queryString: blazemeterValue,
                 },
@@ -111,13 +122,32 @@ function Sidebar() {
 
     }
 
+    function validateInput() {
+
+        // Validate query
+        if (!dynatraceValues.query) {
+            return false;
+        }
+
+        // Validate appId only if $$$ is present in query
+        if (dynatraceValues.query.includes('$$$')) {
+            if (!dynatraceValues.appId) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
     const handelSelectService = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectServices(event.target.value);
         setMetricsData([]);
     }
 
     const isBlazemeterValid = Object.values(blazemeterValue).every(value => value.trim() !== '');
-    const isDynatraceValid = selectedOption.trim() !== '';
+    const isDynatraceValid = validateInput()
+
 
     const isSubmitDisabled = selectService === "blazemeter" ? !isBlazemeterValid : selectService === "dynatrace" ? !isDynatraceValid : true;
 
@@ -132,14 +162,34 @@ function Sidebar() {
                 onChange={handelSelectService}
             />
             {selectService === "dynatrace" && (
-                <SelectBox
-                    label="Select command"
-                    options={ymlData[selectService].commands.map((command: any) => ({
-                        label: command.commandName,
-                        value: command.queryString,
-                    }))}
-                    onChange={(event) => setSelectedOption(event.target.value)}
-                />
+                <>
+                    <SelectBox
+                        label="Select command"
+                        options={ymlData[selectService].commands.map((command: any) => ({
+                            label: command.commandName,
+                            value: command.queryString,
+                        }))}
+                        onChange={(event) => setDynatraceValues((prev) => ({ ...prev, query: event.target.value }))}
+                    />
+                    {ymlData[selectService].commands.map((command: any) =>
+                        command.queryString === dynatraceValues.query && command.queryString.includes('$$$') ? (
+                            <div className={rootStyle.base}>
+                                <div className={rootStyle.field} >
+                                    <Input
+                                        placeholder={"App ID"}
+                                        name={"AppId"}
+                                        onChange={(event) =>
+                                            setDynatraceValues({
+                                                ...dynatraceValues,
+                                                appId: event.target.value,
+                                            })
+                                        }
+                                    />
+                                </div>
+                            </div>
+                        ) : null
+                    )}
+                </>
             )}
             {selectService === "blazemeter" &&
                 ymlData[selectService].requestInput.map((input: string) => (
