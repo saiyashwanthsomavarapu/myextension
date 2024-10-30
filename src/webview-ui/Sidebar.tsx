@@ -19,6 +19,7 @@ import "./main.css";
 import { SelectBox } from "./components/SelectBox";
 import { model } from "./models/model";
 import { rootStyles } from "./assets/root.styles";
+import { ErrorComponent, IError } from "./components/ErrorComponent";
 
 const styles = makeStyles({
     root: {
@@ -46,6 +47,10 @@ function Sidebar() {
     }>({
         query: "",
         appId: ""
+    });
+    const [error, setError] = useState<IError>({
+        message: "",
+        intent: "info",
     });
     const [selectService, setSelectServices] = useState<string>("");
     const [blazemeterValue, setBlazemeterValue] = useState<{
@@ -78,11 +83,22 @@ function Sidebar() {
             const { command, payload } = event.data;
             if (command === "sendData") {
                 setMetricsData(payload.metrics);
+                setError({
+                    message: payload.metrics.length > 0 ? "" : "Data not found",
+                    intent: 'info'
+                });
             }
             if (command === "services") {
                 window.vscode.setState(payload);
                 setApiEndpoints(payload.apiEndpoints);
                 setYmlData(payload.services);
+            }
+            if (command === "error") {
+                setMetricsData([]);
+                setError({
+                    message: payload.error,
+                    intent: 'error'
+                });
             }
             setLoading(false);
         });
@@ -239,6 +255,7 @@ function Sidebar() {
                     ))}
                 </TableBody>
             </Table>}
+            {error.message !== '' && <ErrorComponent message={error.message} intent={error.intent} />}
         </div>
     );
 }

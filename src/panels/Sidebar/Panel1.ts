@@ -1,13 +1,28 @@
-import { WebviewViewProvider, WebviewView, Uri, window } from "vscode";
+import {
+  // commands,
+  WebviewViewProvider,
+  WebviewView,
+  Uri,
+  window,
+  // ExtensionContext,
+  Webview,
+} from "vscode";
 import axios from "axios";
 import { readYAMLFile } from "../../fileOperations";
 import { getUri, getNonce } from "../../utils"; // Helper functions for nonce and URIs
+// import { ResultPanel } from "./ResultPanel";
 
 export class SidebarPanel1 implements WebviewViewProvider {
+  // private resultPanel: ResultPanel;
   private _view?: WebviewView;
   public ymlData: any;
 
-  constructor(private readonly _extensionUri: Uri) {}
+  constructor(
+    private readonly _extensionUri: Uri
+  ) // private readonly _context: ExtensionContext
+  {
+    // this.resultPanel = new ResultPanel(this._extensionUri, this._context);
+  }
 
   public async resolveWebviewView(webviewView: WebviewView) {
     this._view = webviewView;
@@ -26,9 +41,6 @@ export class SidebarPanel1 implements WebviewViewProvider {
 
     // Fetch API data
     this.ymlData = await readYAMLFile(this._view.webview);
-
-    // Automatically call the API when the sidebar is loaded
-    // this._fetchApiData("max");
   }
 
   public async refresh() {
@@ -71,19 +83,29 @@ export class SidebarPanel1 implements WebviewViewProvider {
   }
 
   // Listen for messages from the React component in the sidebar
-  private _setMessageListener(webview: any) {
+  private _setMessageListener(webview: Webview) {
     webview.onDidReceiveMessage((message: any) => {
       const command = message.command;
       if (command === "fetchApiData") {
         this._fetchApiData(message.payload); // Handle API request from React
       }
     });
+
+    // Listen for global updates sent from the main extension
+    //   this._context.subscriptions.push(
+    //     commands.registerCommand("nudge.receiveMessage", (data) => {
+    //       webview.postMessage({ command: "update", payload: data });
+    //     })
+    //   );
   }
+
+  // private async _broadcastMessage(data: any) {
+  //   await commands.executeCommand("nudge.broadcastMessage", data);
+  // }
 
   // Axios call to fetch data
   private async _fetchApiData(apiCall: any) {
     console.log(apiCall);
-
     try {
       const config = {
         method: "post",
@@ -100,11 +122,34 @@ export class SidebarPanel1 implements WebviewViewProvider {
       setTimeout(() => {
         this._view?.webview.postMessage({
           command: "sendData",
-          payload: { metrics: response.data.data },
+          payload: {
+            metrics: response.data.data,
+            serviceName: apiCall.serviceName,
+          },
         });
       }, 1000);
       console.log("API Response:", response.data.data);
+      // storeGlobalState(this._context, "update", {
+      //   metrics: response.data.data,
+      //   serviceName: apiCall.serviceName,
+      // });
+      // Broadcast the data to other views
+      // await this._broadcastMessage({
+      //   command: "updated",
+      //   key: "update",
+      //   value: {
+      //     metrics: response.data.data,
+      //     serviceName: apiCall.serviceName,
+      //   },
+      // });
+      // this.resultPanel.refreshData();
     } catch (error) {
+      this._view?.webview.postMessage({
+        command: "error",
+        payload: {
+          error: "Error in fetching API data",
+        },
+      });
       console.error("Error fetching API data:", error);
     }
   }
