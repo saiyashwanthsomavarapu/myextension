@@ -76,7 +76,7 @@ const Messages = (props: IMessageProps) => {
                             ))}
                         </RadioGroup>
                     )}
-                    {message.type === 'table' && <TableComponent body={message.options ?? []} headers={model[(message.text) as keyof typeof model]} />}
+                    {/* {message.type === 'table' && <TableComponent body={message.options ?? []} headers={model[(message.text) as keyof typeof model]} />} */}
                 </div>
             ))}
         </div>

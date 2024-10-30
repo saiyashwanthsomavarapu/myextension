@@ -1,28 +1,24 @@
 import {
-  // commands,
+  commands,
   WebviewViewProvider,
   WebviewView,
   Uri,
   window,
-  // ExtensionContext,
+  ExtensionContext,
   Webview,
 } from "vscode";
 import axios from "axios";
 import { readYAMLFile } from "../../fileOperations";
-import { getUri, getNonce } from "../../utils"; // Helper functions for nonce and URIs
-// import { ResultPanel } from "./ResultPanel";
+import { getUri, getNonce, storeGlobalState } from "../../utils"; // Helper functions for nonce and URIs
 
 export class SidebarPanel1 implements WebviewViewProvider {
-  // private resultPanel: ResultPanel;
   private _view?: WebviewView;
   public ymlData: any;
 
   constructor(
-    private readonly _extensionUri: Uri
-  ) // private readonly _context: ExtensionContext
-  {
-    // this.resultPanel = new ResultPanel(this._extensionUri, this._context);
-  }
+    private readonly _extensionUri: Uri,
+    private readonly _context: ExtensionContext
+  ) {}
 
   public async resolveWebviewView(webviewView: WebviewView) {
     this._view = webviewView;
@@ -92,16 +88,16 @@ export class SidebarPanel1 implements WebviewViewProvider {
     });
 
     // Listen for global updates sent from the main extension
-    //   this._context.subscriptions.push(
-    //     commands.registerCommand("nudge.receiveMessage", (data) => {
-    //       webview.postMessage({ command: "update", payload: data });
-    //     })
-    //   );
+    this._context.subscriptions.push(
+      commands.registerCommand("nudge.receiveMessage", (data) => {
+        webview.postMessage({ command: "update", payload: data });
+      })
+    );
   }
 
-  // private async _broadcastMessage(data: any) {
-  //   await commands.executeCommand("nudge.broadcastMessage", data);
-  // }
+  private async _broadcastMessage(data: any) {
+    await commands.executeCommand("nudge.broadcastMessage", data);
+  }
 
   // Axios call to fetch data
   private async _fetchApiData(apiCall: any) {
@@ -129,19 +125,17 @@ export class SidebarPanel1 implements WebviewViewProvider {
         });
       }, 1000);
       console.log("API Response:", response.data.data);
-      // storeGlobalState(this._context, "update", {
-      //   metrics: response.data.data,
-      //   serviceName: apiCall.serviceName,
-      // });
+      const responsePayload = {
+        metrics: response.data.data,
+        serviceName: apiCall.serviceName,
+      };
+      storeGlobalState(this._context, "update", responsePayload);
       // Broadcast the data to other views
-      // await this._broadcastMessage({
-      //   command: "updated",
-      //   key: "update",
-      //   value: {
-      //     metrics: response.data.data,
-      //     serviceName: apiCall.serviceName,
-      //   },
-      // });
+      await this._broadcastMessage({
+        command: "updated",
+        key: "update",
+        value: responsePayload,
+      });
       // this.resultPanel.refreshData();
     } catch (error) {
       this._view?.webview.postMessage({

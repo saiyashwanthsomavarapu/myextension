@@ -101,12 +101,12 @@ const ChatLayout = () => {
             const { command, payload } = event.data;
             if (command === "sendData") {
                 setMetricsData(payload.metrics);
-                setMessages((prevMessages) => [...prevMessages, {
-                    sender: 'bot',
-                    type: 'table',
-                    text: payload.serviceName,
-                    options: payload.metrics
-                }]);
+                // setMessages((prevMessages) => [...prevMessages, {
+                //     sender: 'bot',
+                //     type: 'table',
+                //     text: payload.serviceName,
+                //     options: payload.metrics
+                // }]);
             }
             if (command === "services") {
                 window.vscode.setState(payload);
@@ -182,11 +182,6 @@ const ChatLayout = () => {
 
             if (selectedService === 'dynatrace') {
                 const value = ymlData.dynatrace.commands.find((command: { commandName: string; }) => command.commandName === dynatraceValues.query);
-                setMessages((prevMessages) => [...prevMessages, {
-                    sender: 'user',
-                    type: 'text',
-                    text: value
-                }])
                 setDynatraceValues({
                     ...dynatraceValues,
                     appId: inputValue
@@ -195,13 +190,14 @@ const ChatLayout = () => {
                     apiQuery: apiEndpoints[selectedService],
                     serviceName: selectedService,
                     queryString: {
-                        metricsSelector: dynatraceValues.query.replace('$$$', inputValue),
+                        metricsSelector: value.queryString.replace('$$$', inputValue),
                         dimensionName: value.dimensionName
                     }
                 });
             }
         }
     };
+
 
     const handleSuggestionClick = (suggestion: string) => {
         const atIndex = inputValue.lastIndexOf('@');
@@ -212,23 +208,39 @@ const ChatLayout = () => {
 
     const handleRadioChange = (_: React.FormEvent<HTMLDivElement>, data: RadioGroupOnChangeData) => {
         if (selectedService === 'dynatrace') {
-            console.log(data.value, apiEndpoints);
             const value = ymlData.dynatrace.commands.find((command: { commandName: string; }) => command.commandName === data.value);
-            setMessages((prevMessages) => [...prevMessages, {
-                sender: 'user',
-                type: 'text',
-                text: data?.value ?? ''
-            },
-            {
-                sender: 'bot',
-                type: 'text',
-                text: 'Enter the App Id:'
-            }
-            ]);
+            console.log(value);
             setDynatraceValues({
                 ...dynatraceValues,
-                query: value?.queryString ?? ''
+                query: value.commandName ?? ''
             })
+            if (!value.queryString.includes('$$$')) {
+                setMessages((prevMessages) => [...prevMessages, {
+                    sender: 'user',
+                    type: 'text',
+                    text: data?.value ?? ''
+                }]);
+                apiRequest({
+                    apiQuery: apiEndpoints[selectedService],
+                    serviceName: selectedService,
+                    queryString: {
+                        metricsSelector: value.queryString.replace('$$$', inputValue),
+                        dimensionName: value.dimensionName
+                    }
+                });
+            } else {
+                setMessages((prevMessages) => [...prevMessages, {
+                    sender: 'user',
+                    type: 'text',
+                    text: data?.value ?? ''
+                },
+                {
+                    sender: 'bot',
+                    type: 'text',
+                    text: 'Enter the App Id:'
+                }
+                ]);
+            }
 
         }
     };

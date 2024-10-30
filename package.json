@@ -44,7 +44,14 @@
         {
           "type": "webview",
           "id": "chat-layout",
-          "name": "Chat Layout",
+          "name": "Chat",
+          "icon": "media/productivity-expert-iconart.svg",
+          "contextualTitle": "Nudge"
+        },
+        {
+          "type": "webview",
+          "id": "result",
+          "name": "Result",
           "icon": "media/productivity-expert-iconart.svg",
           "contextualTitle": "Nudge"
         }
@@ -54,6 +61,22 @@
       {
         "command": "nudge.selectYAMLFile",
         "title": "Select YAML File from Workspace"
+      },
+      {
+        "command": "nudge.updateGlobalState",
+        "title": "Update Global State"
+      },
+      {
+        "command": "nudge.getGlobalState",
+        "title": "Get Global State"
+      },
+      {
+        "command": "nudge.broadcastMessage",
+        "title": "Broadcast Message"
+      },
+      {
+        "command": "nudge.receiveMessage",
+        "title": "Receive Message"
       }
     ]
   },

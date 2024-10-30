@@ -1,25 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
-    TableBody,
-    TableCell,
-    TableRow,
-    Table,
-    TableHeader,
-    TableHeaderCell,
-    TableCellLayout,
     FluentProvider,
     webDarkTheme,
     makeStyles,
     Button,
     Input,
-    Spinner,
 } from "@fluentui/react-components";
 import "./main.css";
 import { SelectBox } from "./components/SelectBox";
-import { model } from "./models/model";
 import { rootStyles } from "./assets/root.styles";
-import { ErrorComponent, IError } from "./components/ErrorComponent";
 
 const styles = makeStyles({
     root: {
@@ -29,17 +19,10 @@ const styles = makeStyles({
     btn: {
         width: "100%",
         marginTop: "20px",
-    },
-    table: {
-        marginTop: "20px",
-    },
-    spinner: {
-        margin: "20px auto", // Center the spinner
-    },
+    }
 });
 
 function Sidebar() {
-    const [metricsData, setMetricsData] = useState<any>([]);
     const [ymlData, setYmlData] = useState<any>([]);
     const [dynatraceValues, setDynatraceValues] = useState<{
         query: string;
@@ -47,10 +30,6 @@ function Sidebar() {
     }>({
         query: "",
         appId: ""
-    });
-    const [error, setError] = useState<IError>({
-        message: "",
-        intent: "info",
     });
     const [selectService, setSelectServices] = useState<string>("");
     const [blazemeterValue, setBlazemeterValue] = useState<{
@@ -60,16 +39,9 @@ function Sidebar() {
     const [apiEndpoints, setApiEndpoints] = useState<{ [key: string]: string }>(
         {}
     );
-    const [loading, setLoading] = useState<boolean>(false);
 
     const style = styles();
     const rootStyle = rootStyles();
-    const primaryColor = getComputedStyle(document.body).getPropertyValue(
-        "--primary-color"
-    );
-    const backgroundColor = getComputedStyle(document.body).getPropertyValue(
-        "--background-color"
-    );
 
     useEffect(() => {
         const savedState = window.vscode.getState();
@@ -81,31 +53,16 @@ function Sidebar() {
         window.addEventListener("message", (event) => {
             console.log("transformation:", event.data);
             const { command, payload } = event.data;
-            if (command === "sendData") {
-                setMetricsData(payload.metrics);
-                setError({
-                    message: payload.metrics.length > 0 ? "" : "Data not found",
-                    intent: 'info'
-                });
-            }
+
             if (command === "services") {
                 window.vscode.setState(payload);
                 setApiEndpoints(payload.apiEndpoints);
                 setYmlData(payload.services);
             }
-            if (command === "error") {
-                setMetricsData([]);
-                setError({
-                    message: payload.error,
-                    intent: 'error'
-                });
-            }
-            setLoading(false);
         });
     }, []);
 
     const handleSubmit = () => {
-        setLoading(true);
         if (selectService === "dynatrace") {
             const value = ymlData.dynatrace.commands.find((command: { queryString: string; }) => command.queryString === dynatraceValues.query);
             window.vscode.postMessage({
@@ -139,12 +96,10 @@ function Sidebar() {
     }
 
     function validateInput() {
-
         // Validate query
         if (!dynatraceValues.query) {
             return false;
         }
-
         // Validate appId only if $$$ is present in query
         if (dynatraceValues.query.includes('$$$')) {
             if (!dynatraceValues.appId) {
@@ -155,10 +110,8 @@ function Sidebar() {
         return true;
     }
 
-
     const handelSelectService = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectServices(event.target.value);
-        setMetricsData([]);
     }
 
     const isBlazemeterValid = Object.values(blazemeterValue).every(value => value.trim() !== '');
@@ -228,34 +181,6 @@ function Sidebar() {
             <Button className={style.btn} appearance="primary" disabled={isSubmitDisabled} onClick={handleSubmit}>
                 Submit
             </Button>
-            {loading && <Spinner className={style.spinner} size="large" />}
-            {metricsData.length > 0 && <Table
-                className={style.table}
-                arial-label="Default table"
-                style={{ minWidth: "510px" }}
-            >
-                <TableHeader>
-                    <TableRow>
-                        {
-                            model[selectService as keyof typeof model].map((key: string) => (
-                                <TableHeaderCell>{key}</TableHeaderCell>
-                            ))
-                        }
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {metricsData.map((metrics: any, index: number) => (
-                        <TableRow key={index}>
-                            {model[selectService as keyof typeof model].map((key: string) => (
-                                <TableCell>
-                                    <TableCellLayout>{metrics[key]}</TableCellLayout>
-                                </TableCell>
-                            ))}
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>}
-            {error.message !== '' && <ErrorComponent message={error.message} intent={error.intent} />}
         </div>
     );
 }

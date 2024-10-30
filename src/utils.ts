@@ -1,4 +1,4 @@
-import { Uri, Webview } from "vscode";
+import { ExtensionContext, Uri, Webview } from "vscode";
 
 /**
  * A helper function which will get the webview URI of a given file or resource.
@@ -35,4 +35,32 @@ export function getNonce() {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;
+}
+
+// Store data globally
+export function storeGlobalState(
+  context: ExtensionContext,
+  key: string,
+  value: any
+) {
+  context.globalState.update(key, value);
+}
+
+// Retrieve global state
+export function getGlobalState(context: ExtensionContext, key: string) {
+  return context.globalState.get(key);
+}
+
+// Store data in workspace state
+export function storeWorkspaceState(
+  context: ExtensionContext,
+  key: string,
+  value: any
+) {
+  context.workspaceState.update(key, value);
+}
+
+// Retrieve workspace state
+export function getWorkspaceState(context: ExtensionContext, key: string) {
+  return context.workspaceState.get(key);
 }
