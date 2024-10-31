@@ -1,5 +1,5 @@
 import { makeStyles, Radio, RadioGroup, RadioGroupOnChangeData } from '@fluentui/react-components';
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import TableComponent from './TableComponent';
 import { model } from '../models/model';
 
@@ -8,11 +8,12 @@ const useStyles = makeStyles({
         display: "flex",
         flexDirection: "column",
         overflowY: "auto",
+        maxHeight: "100vh", // Set your desired maximum height here
         padding: "10px",
         gap: "10px",
-        backgroundColor: "var(--vscode-sidebar-panel)",
+        // backgroundColor: "var(--vscode-sidebar-panel)",
         borderRadius: "4px",
-        border: "1px solid var(--vscode-input-border)",
+        // border: "1px solid var(--vscode-input-border)",
     },
     message: {
         padding: "10px",
@@ -29,18 +30,6 @@ const useStyles = makeStyles({
         alignSelf: "flex-start",
         backgroundColor: "var(--vscode-list-hoverBackground)",
         color: "var(--vscode-input-foreground)",
-    },
-    suggestions: {
-        backgroundColor: "var(--vscode-dropdown-background)",
-        color: "var(--vscode-dropdown-foreground)",
-        border: "1px solid var(--vscode-input-border)",
-        borderRadius: "4px",
-        padding: "5px",
-        zIndex: 1000,
-        position: "absolute",
-        bottom: "50px", // Positioned just above the input box
-        left: "10px",
-        right: "10px",
     },
 });
 
@@ -60,8 +49,17 @@ interface IMessageProps {
 const Messages = (props: IMessageProps) => {
     const { messages, handleRadio } = props;
     const classes = useStyles();
+    const chatWindowRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        // Scroll to the bottom when messages change
+        if (chatWindowRef.current) {
+            chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
+        }
+    }, [messages]);
+
     return (
-        <div className={classes.chatWindow}>
+        <div ref={chatWindowRef} className={classes.chatWindow}>
             {messages.map((message, index) => (
                 <div
                     key={index}

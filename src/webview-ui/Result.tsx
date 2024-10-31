@@ -3,6 +3,7 @@ import { FluentProvider, makeStyles, Table, TableBody, TableCell, TableCellLayou
 import { createRoot } from 'react-dom/client';
 import { model } from './models/model';
 import { ErrorComponent, IError } from './components/ErrorComponent';
+import './main.css';
 
 const useStyles = makeStyles({
     root: {
@@ -17,6 +18,10 @@ const useStyles = makeStyles({
         backgroundColor: "var(--vscode-panel-background)",
         borderRadius: "4px",
     },
+    tableCell: {
+        overflow: 'hidden',
+        wordBreak: 'break-word'
+    }
 });
 
 const Result = () => {
@@ -70,7 +75,7 @@ const Result = () => {
                     {metricsData.map((metrics: any, index: number) => (
                         <TableRow key={index}>
                             {model[selectedService as keyof typeof model].map((key: string) => (
-                                <TableCell>
+                                <TableCell className={classes.tableCell}>
                                     <TableCellLayout>{metrics[key]}</TableCellLayout>
                                 </TableCell>
                             ))}
