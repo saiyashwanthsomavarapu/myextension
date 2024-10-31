@@ -7,20 +7,18 @@ import './main.css';
 
 const useStyles = makeStyles({
     root: {
-        position: "absolute",
-        bottom: "10px",
-        left: "10px",
-        right: "10px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "10px",
-        padding: "10px",
+        marginBottom: '10px',
         backgroundColor: "var(--vscode-panel-background)",
+    },
+    tableContainer: {
+        // maxHeight: "100vh", // Set your desired maximum height for the table container
+        // overflowY: "auto",
+        border: "1px solid var(--vscode-input-border)", // Optional: add border to distinguish the scroll area
         borderRadius: "4px",
     },
     tableCell: {
         overflow: 'hidden',
-        wordBreak: 'break-word'
+        wordBreak: 'break-word',
     }
 });
 
@@ -42,12 +40,12 @@ const Result = () => {
             console.log("result:event:", event.data);
             const { command, payload } = event.data;
             if (command === "update") {
-                console.log('payload', payload, model)
+                console.log('payload', payload, model);
                 setMetricsData(payload.metrics);
                 setError({
                     message: payload.metrics.length > 0 ? '' : 'Data not found',
                     intent: 'info'
-                })
+                });
                 setSelectedService(payload.serviceName);
             }
         });
@@ -59,31 +57,30 @@ const Result = () => {
     return (
         <div className={classes.root}>
             <h1>{selectedService}</h1>
-            {metricsData.length > 0 && <Table
-                arial-label="Default table"
-            >
-                <TableHeader>
-                    <TableRow>
-                        {
-                            model[selectedService as keyof typeof model].map((key: string) => (
-                                <TableHeaderCell>{key}</TableHeaderCell>
-                            ))
-                        }
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {metricsData.map((metrics: any, index: number) => (
-                        <TableRow key={index}>
-                            {model[selectedService as keyof typeof model].map((key: string) => (
-                                <TableCell className={classes.tableCell}>
-                                    <TableCellLayout>{metrics[key]}</TableCellLayout>
-                                </TableCell>
+            {metricsData.length > 0 && (
+                <div className={classes.tableContainer}>
+                    <Table aria-label="Default table">
+                        <TableHeader>
+                            <TableRow>
+                                {model[selectedService as keyof typeof model].map((key: string) => (
+                                    <TableHeaderCell key={key}>{key}</TableHeaderCell>
+                                ))}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {metricsData.map((metrics: any, index: number) => (
+                                <TableRow key={index}>
+                                    {model[selectedService as keyof typeof model].map((key: string) => (
+                                        <TableCell key={key} className={classes.tableCell}>
+                                            <TableCellLayout>{metrics[key]}</TableCellLayout>
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
                             ))}
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>}
-            {/** Error Message */}
+                        </TableBody>
+                    </Table>
+                </div>
+            )}
             {error.message !== '' && <ErrorComponent message={error.message} intent={error.intent} />}
         </div>
     );
@@ -96,4 +93,3 @@ createRoot(document.getElementById("root")!).render(
         </FluentProvider>
     </React.StrictMode>
 );
-
