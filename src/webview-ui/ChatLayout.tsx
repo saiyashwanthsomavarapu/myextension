@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Button, FluentProvider, Input, makeStyles, RadioGroupOnChangeData, webDarkTheme } from '@fluentui/react-components';
+import { Button, Combobox, ComboboxProps, FluentProvider, Input, makeStyles, Option, OptionOnSelectData, RadioGroupOnChangeData, useComboboxFilter, webDarkTheme } from '@fluentui/react-components';
 import { SendRegular } from '@fluentui/react-icons';
 import { List, ListItem } from '@fluentui/react-list-preview';
 import { createRoot } from 'react-dom/client';
 import { apiRequest } from './utils';
 import Messages from './components/Messages';
+import './main.css';
 
 const useStyles = makeStyles({
     root: {
@@ -88,6 +89,13 @@ const ChatLayout = () => {
     const [selectedService, setSelectedService] = useState<string>('');
     const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
 
+    const children = useComboboxFilter(inputValue, ['@dynatrace', '@blazemeter'], {
+        noOptionsMessage: "No animals match your search.",
+    });
+    const onOptionSelect: ComboboxProps["onOptionSelect"] = (e, data) => {
+        setInputValue(data.optionText ?? "");
+    };
+
     useEffect(() => {
         const savedState = window.vscode.getState();
         console.log('useState', savedState)
@@ -101,12 +109,12 @@ const ChatLayout = () => {
             const { command, payload } = event.data;
             if (command === "sendData") {
                 setMetricsData(payload.metrics);
-                // setMessages((prevMessages) => [...prevMessages, {
-                //     sender: 'bot',
-                //     type: 'table',
-                //     text: payload.serviceName,
-                //     options: payload.metrics
-                // }]);
+                setMessages((prevMessages) => [...prevMessages, {
+                    sender: 'bot',
+                    type: 'table',
+                    text: payload.serviceName,
+                    options: payload.metrics
+                }]);
             }
             if (command === "services") {
                 window.vscode.setState(payload);
@@ -119,20 +127,27 @@ const ChatLayout = () => {
         };
     }, []);
 
-    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;
+    const handleInputChange = (targetValue: string) => {
+        console.log(targetValue)
+        const value = targetValue;
         setInputValue(value);
 
-        const atIndex = value.lastIndexOf('@');
-        if (atIndex !== -1) {
-            const query = value.slice(atIndex + 1).toLowerCase();
-            const filtered = suggestions.filter((suggestion) =>
-                suggestion.toLowerCase().startsWith(query)
-            );
-            setFilteredSuggestions(filtered);
+        if (value === "/") {
+            // Show all suggestions if the input is only "/"
+            setFilteredSuggestions(suggestions);
             setShowSuggestions(true);
         } else {
-            setShowSuggestions(false);
+            const atIndex = value.lastIndexOf('@');
+            if (atIndex !== -1) {
+                const query = value.slice(atIndex + 1).toLowerCase();
+                const filtered = suggestions.filter((suggestion) =>
+                    suggestion.toLowerCase().startsWith(query)
+                );
+                setFilteredSuggestions(filtered);
+                setShowSuggestions(true);
+            } else {
+                setShowSuggestions(false);
+            }
         }
     };
 
@@ -252,19 +267,24 @@ const ChatLayout = () => {
             <Messages messages={messages} handleRadio={handleRadioChange} />
 
             {/* Show suggestions if applicable */}
-            {showSuggestions && filteredSuggestions.length > 0 && (
+            {/* {showSuggestions && filteredSuggestions.length > 0 && (
                 <Suggestions suggestions={filteredSuggestions} handleSuggestionClick={handleSuggestionClick} />
-            )}
+            )} */}
 
             {/* Input box and send button */}
             <div className={classes.inputWrapper}>
-                <Input
-                    name="chatInput"
-                    className={classes.input}
+                <Combobox
                     placeholder="Type your message..."
-                    value={inputValue}
-                    onChange={handleInputChange}
-                />
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && inputValue.trim()) {
+                            handleSendMessage();
+                        }
+                    }}
+                    onOptionSelect={onOptionSelect}
+                >
+                    {children}
+                </Combobox>
                 <Button className={classes.btn} disabled={!inputValue} appearance="primary" icon={<SendRegular />} onClick={handleSendMessage} />
             </div>
         </div>
@@ -276,25 +296,25 @@ interface ISuggestionProps {
     handleSuggestionClick: (suggestion: string) => void;
 }
 
-const Suggestions = (props: ISuggestionProps) => {
-    const { suggestions, handleSuggestionClick } = props;
-    const classes = useStyles();
-    return (
-        <div className={classes.suggestions}>
-            <List>
-                {suggestions.map((suggestion) => (
-                    <ListItem
-                        key={suggestion}
-                        className={classes.suggestionItem}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                    >
-                        {suggestion}
-                    </ListItem>
-                ))}
-            </List>
-        </div>
-    );
-}
+// const Suggestions = (props: ISuggestionProps) => {
+//     const { suggestions, handleSuggestionClick } = props;
+//     const classes = useStyles();
+//     return (
+//         <div className={classes.suggestions}>
+//             <List>
+//                 {suggestions.map((suggestion) => (
+//                     <ListItem
+//                         key={suggestion}
+//                         className={classes.suggestionItem}
+//                         onClick={() => handleSuggestionClick(suggestion)}
+//                     >
+//                         {suggestion}
+//                     </ListItem>
+//                 ))}
+//             </List>
+//         </div>
+//     );
+// }
 
 
 createRoot(document.getElementById("root")!).render(

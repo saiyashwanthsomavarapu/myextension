@@ -47,13 +47,6 @@
           "name": "Chat",
           "icon": "media/productivity-expert-iconart.svg",
           "contextualTitle": "Nudge"
-        },
-        {
-          "type": "webview",
-          "id": "result",
-          "name": "Result",
-          "icon": "media/productivity-expert-iconart.svg",
-          "contextualTitle": "Nudge"
         }
       ]
     },

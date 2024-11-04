@@ -1,8 +1,9 @@
 import { makeStyles, Table, TableBody, TableCell, TableCellLayout, TableHeader, TableHeaderCell, TableRow } from '@fluentui/react-components'
 import React from 'react'
+import { IColumnDefinition } from 'webview-ui/models/model';
 
 interface ITableProps {
-    headers: string[],
+    headers: IColumnDefinition[],
     body: any[]
 }
 
@@ -25,8 +26,8 @@ function TableComponent(props: ITableProps) {
             <TableHeader>
                 <TableRow>
                     {
-                        headers.map((key: string) => (
-                            <TableHeaderCell>{key}</TableHeaderCell>
+                        headers.map((column: IColumnDefinition) => (
+                            <TableHeaderCell>{column.name}</TableHeaderCell>
                         ))
                     }
                 </TableRow>
@@ -34,9 +35,9 @@ function TableComponent(props: ITableProps) {
             <TableBody>
                 {body.length > 0 && body.map((item: any, index: number) => (
                     <TableRow key={index}>
-                        {headers.map((key: string) => (
+                        {headers.map((column: IColumnDefinition) => (
                             <TableCell>
-                                <TableCellLayout>{item[key]}</TableCellLayout>
+                                <TableCellLayout>{item[column.fieldName]}</TableCellLayout>
                             </TableCell>
                         ))}
                     </TableRow>

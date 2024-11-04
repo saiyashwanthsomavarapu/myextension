@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FluentProvider, makeStyles, Table, TableBody, TableCell, TableCellLayout, TableHeader, TableHeaderCell, TableRow, webDarkTheme } from '@fluentui/react-components';
 import { createRoot } from 'react-dom/client';
-import { model } from './models/model';
+import { IColumnDefinition, model } from './models/model';
 import { ErrorComponent, IError } from './components/ErrorComponent';
 import './main.css';
 
@@ -62,17 +62,17 @@ const Result = () => {
                     <Table aria-label="Default table">
                         <TableHeader>
                             <TableRow>
-                                {model[selectedService as keyof typeof model].map((key: string) => (
-                                    <TableHeaderCell key={key}>{key}</TableHeaderCell>
+                                {model[selectedService as keyof typeof model].map((column: IColumnDefinition) => (
+                                    <TableHeaderCell key={column.fieldName}>{column.name}</TableHeaderCell>
                                 ))}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {metricsData.map((metrics: any, index: number) => (
                                 <TableRow key={index}>
-                                    {model[selectedService as keyof typeof model].map((key: string) => (
-                                        <TableCell key={key} className={classes.tableCell}>
-                                            <TableCellLayout>{metrics[key]}</TableCellLayout>
+                                    {model[selectedService as keyof typeof model].map((column: IColumnDefinition) => (
+                                        <TableCell key={column.fieldName} className={classes.tableCell}>
+                                            <TableCellLayout>{metrics[column.fieldName]}</TableCellLayout>
                                         </TableCell>
                                     ))}
                                 </TableRow>
