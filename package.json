@@ -54,22 +54,6 @@
       {
         "command": "nudge.selectYAMLFile",
         "title": "Select YAML File from Workspace"
-      },
-      {
-        "command": "nudge.updateGlobalState",
-        "title": "Update Global State"
-      },
-      {
-        "command": "nudge.getGlobalState",
-        "title": "Get Global State"
-      },
-      {
-        "command": "nudge.broadcastMessage",
-        "title": "Broadcast Message"
-      },
-      {
-        "command": "nudge.receiveMessage",
-        "title": "Receive Message"
       }
     ]
   },

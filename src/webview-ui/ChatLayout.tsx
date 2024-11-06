@@ -6,60 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { apiRequest } from './utils';
 import Messages from './components/Messages';
 import './main.css';
-
-const useStyles = makeStyles({
-    root: {
-        position: "absolute",
-        bottom: "10px",
-        left: "10px",
-        right: "10px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "10px",
-        padding: "10px",
-        backgroundColor: "var(--vscode-panel-background)",
-        borderRadius: "4px",
-    },
-    inputWrapper: {
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: "10px",
-    },
-    input: {
-        flex: 1,
-        minWidth: "0",
-        border: "1px solid var(--vscode-input-border)",
-        backgroundColor: "var(--vscode-input-background)",
-        color: "var(--vscode-input-foreground)",
-    },
-    btn: {
-        minWidth: "50px",
-        backgroundColor: "var(--vscode-button-background)",
-        color: "var(--vscode-button-foreground)",
-        border: "none",
-        cursor: "pointer",
-    },
-    suggestions: {
-        backgroundColor: "var(--vscode-dropdown-background)",
-        color: "var(--vscode-dropdown-foreground)",
-        border: "1px solid var(--vscode-input-border)",
-        borderRadius: "4px",
-        padding: "5px",
-        zIndex: 1000,
-        position: "absolute",
-        bottom: "50px", // Positioned just above the input box
-        left: "10px",
-        right: "10px",
-    },
-    suggestionItem: {
-        padding: "5px 10px",
-        cursor: "pointer",
-        '&:hover': {
-            backgroundColor: "var(--vscode-list-hoverBackground)",
-        },
-    },
-});
+import { useStyles } from './ChatLayout.styles';
 
 interface IMessage {
     text?: string;
@@ -70,7 +17,7 @@ interface IMessage {
 
 const ChatLayout = () => {
     const classes = useStyles();
-    const [metricsData, setMetricsData] = useState<any>([]);
+    // const [metricsData, setMetricsData] = useState<any>([]);
     const [ymlData, setYmlData] = useState<any>([]);
     const [dynatraceValues, setDynatraceValues] = useState<{
         query: string;
@@ -83,18 +30,20 @@ const ChatLayout = () => {
         {}
     );
     const [inputValue, setInputValue] = useState('');
+    const [values, setValues] = useState<string[]>([]);
     const [messages, setMessages] = useState<IMessage[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [suggestions] = useState(['dynatrace', 'blazemeter']);
     const [selectedService, setSelectedService] = useState<string>('');
     const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
-
-    const children = useComboboxFilter(inputValue, ['@dynatrace', '@blazemeter'], {
-        noOptionsMessage: "No animals match your search.",
-    });
-    const onOptionSelect: ComboboxProps["onOptionSelect"] = (e, data) => {
-        setInputValue(data.optionText ?? "");
-    };
+    const [focus, setFocus] = useState(false);
+    const [isDynatraceSelected, setIsDynatraceSelected] = useState(false);
+    // const children = useComboboxFilter(inputValue, ['@dynatrace', '@blazemeter'], {
+    //     noOptionsMessage: "No animals match your search.",
+    // });
+    // const onOptionSelect: ComboboxProps["onOptionSelect"] = (e, data) => {
+    //     setInputValue(data.optionText ?? "");
+    // };
 
     useEffect(() => {
         const savedState = window.vscode.getState();
@@ -108,7 +57,7 @@ const ChatLayout = () => {
             console.log("chat:", event.data);
             const { command, payload } = event.data;
             if (command === "sendData") {
-                setMetricsData(payload.metrics);
+                // setMetricsData(payload.metrics);
                 setMessages((prevMessages) => [...prevMessages, {
                     sender: 'bot',
                     type: 'table',
@@ -127,27 +76,98 @@ const ChatLayout = () => {
         };
     }, []);
 
-    const handleInputChange = (targetValue: string) => {
-        console.log(targetValue)
-        const value = targetValue;
-        setInputValue(value);
+    // const handleInputChange = (value: string) => {
+    //     setInputValue(value);
+    //     if (value === '@') {
+    //         setShowSuggestions(true); // Show initial suggestions on "@"
+    //         setFilteredSuggestions(suggestions);
+    //     } else if (value.startsWith('@dynatrace:')) {
+    //         setShowSuggestions(true); // Show Dynatrace commands on selecting "@dynatrace"
+    //     } else {
+    //         setShowSuggestions(false); // Hide suggestions otherwise
+    //     }
+    // };
+    function extractAtSymbols(input: string): string[] {
+        return input.match(/@\w*/g) || [];
+    }
 
-        if (value === "/") {
-            // Show all suggestions if the input is only "/"
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        console.log(value, value.charAt(value.length - 1) === ' ');
+        setInputValue(value);
+        setValues(extractAtSymbols(value));
+
+        const atIndex = value.lastIndexOf('@');
+        const colonIndex = value.lastIndexOf(':');
+        const spaceAfterColon = value.charAt(value.length - 1) === ' ';
+        const service = value.slice(atIndex + 1, colonIndex);
+        setSelectedService(service);
+
+        console.log(atIndex, colonIndex, spaceAfterColon, service);
+        // Scenario 1: Input is just "@"
+        if (value === "@" || value.charAt(value.length - 1) === '@') {
             setFilteredSuggestions(suggestions);
             setShowSuggestions(true);
-        } else {
-            const atIndex = value.lastIndexOf('@');
-            if (atIndex !== -1) {
-                const query = value.slice(atIndex + 1).toLowerCase();
-                const filtered = suggestions.filter((suggestion) =>
-                    suggestion.toLowerCase().startsWith(query)
-                );
-                setFilteredSuggestions(filtered);
-                setShowSuggestions(true);
+            setIsDynatraceSelected(false);
+        }
+        // Scenario 2: Input starts with "@", show suggestions for "dynatrace" and "blazemeter"
+        else if (atIndex === 0 && colonIndex === -1) {
+            console.log('2')
+            const query = value.slice(1).toLowerCase(); // Everything after "@"
+            const filtered = suggestions.filter(suggestion =>
+                suggestion.toLowerCase().startsWith(query)
+            );
+            setFilteredSuggestions(filtered);
+            setShowSuggestions(true);
+        }
+        // Scenario 3: Selected @dynatrace and input is "@dynatrace:", show dynatrace commands
+        else if (suggestions.includes(service) && !spaceAfterColon) {
+            console.log('3')
+            setIsDynatraceSelected(true);
+            if (ymlData[service].commands) {
+                setFilteredSuggestions(ymlData[service].commands.map((command: { commandName: string; }) => command.commandName));
             } else {
-                setShowSuggestions(false);
+                setFilteredSuggestions([]);
             }
+            setShowSuggestions(true);
+        }
+        // Scenario 4: Space added after "@dynatrace:", hide the suggestions
+        else if (value.charAt(value.length - 1) === ' ') {
+            console.log('4')
+            setShowSuggestions(false);
+        }
+        // Scenario 4: After "@dynatrace:", adding another "@" (like "@dynatrace: @") show main suggestions
+        else if (atIndex === 0 && colonIndex !== -1 && value[colonIndex + 1] === " " && value.includes('@', colonIndex + 2)) {
+            console.log('@dynatrace: @', suggestions)
+            setFilteredSuggestions(suggestions);
+            setShowSuggestions(true);
+        }
+        // Scenario 5: Any value that doesn't contain "@", hide suggestions
+        else if (value.trim() && !value.includes('@')) {
+            console.log('5')
+            setShowSuggestions(false);
+        }
+        // Scenario 6: Input contains "@", show main suggestions
+        else if (value.includes('@')) {
+            console.log('6')
+            setFilteredSuggestions(suggestions);
+            setShowSuggestions(true);
+        }
+        // Default: Hide suggestions if not in any of the above cases
+        else {
+            setShowSuggestions(false);
+        }
+    };
+
+
+    const handleSuggestionClick = (suggestion: string) => {
+        const value = inputValue !== '' ? inputValue : '';
+        if (isDynatraceSelected) {
+            setInputValue(`${value}${suggestion}`);
+            setShowSuggestions(false);
+        } else {
+            setInputValue(`${value}${suggestion}:`);
+            setShowSuggestions(false);
         }
     };
 
@@ -162,7 +182,7 @@ const ChatLayout = () => {
         setInputValue('');
         setShowSuggestions(false);
         if (suggestions.includes(currentValue)) {
-            setSelectedService(currentValue);
+            // setSelectedService(currentValue);
             if (newUserMessage.text === '@dynatrace') {
                 setMessages((prevMessages) => [...prevMessages, {
                     sender: 'bot',
@@ -214,12 +234,12 @@ const ChatLayout = () => {
     };
 
 
-    const handleSuggestionClick = (suggestion: string) => {
-        const atIndex = inputValue.lastIndexOf('@');
-        const newValue = inputValue.slice(0, atIndex + 1) + suggestion;
-        setInputValue(newValue);
-        setShowSuggestions(false);
-    };
+    // const handleSuggestionClick = (suggestion: string) => {
+    //     const atIndex = inputValue.lastIndexOf('@');
+    //     const newValue = inputValue.slice(0, atIndex + 1) + suggestion;
+    //     setInputValue(newValue);
+    //     setShowSuggestions(false);
+    // };
 
     const handleRadioChange = (_: React.FormEvent<HTMLDivElement>, data: RadioGroupOnChangeData) => {
         if (selectedService === 'dynatrace') {
@@ -267,13 +287,21 @@ const ChatLayout = () => {
             <Messages messages={messages} handleRadio={handleRadioChange} />
 
             {/* Show suggestions if applicable */}
-            {/* {showSuggestions && filteredSuggestions.length > 0 && (
+            {showSuggestions && filteredSuggestions.length > 0 && (
                 <Suggestions suggestions={filteredSuggestions} handleSuggestionClick={handleSuggestionClick} />
-            )} */}
-
+            )}
+            {JSON.stringify(values)}
             {/* Input box and send button */}
             <div className={classes.inputWrapper}>
-                <Combobox
+                <Input
+                    name="chatInput"
+                    autoFocus={focus}
+                    className={classes.input}
+                    placeholder="Type your message..."
+                    value={inputValue}
+                    onChange={(e) => handleInputChange(e)}
+                />
+                {/* <Combobox
                     placeholder="Type your message..."
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value)}
                     onKeyDown={(e) => {
@@ -284,7 +312,7 @@ const ChatLayout = () => {
                     onOptionSelect={onOptionSelect}
                 >
                     {children}
-                </Combobox>
+                </Combobox> */}
                 <Button className={classes.btn} disabled={!inputValue} appearance="primary" icon={<SendRegular />} onClick={handleSendMessage} />
             </div>
         </div>
@@ -296,25 +324,25 @@ interface ISuggestionProps {
     handleSuggestionClick: (suggestion: string) => void;
 }
 
-// const Suggestions = (props: ISuggestionProps) => {
-//     const { suggestions, handleSuggestionClick } = props;
-//     const classes = useStyles();
-//     return (
-//         <div className={classes.suggestions}>
-//             <List>
-//                 {suggestions.map((suggestion) => (
-//                     <ListItem
-//                         key={suggestion}
-//                         className={classes.suggestionItem}
-//                         onClick={() => handleSuggestionClick(suggestion)}
-//                     >
-//                         {suggestion}
-//                     </ListItem>
-//                 ))}
-//             </List>
-//         </div>
-//     );
-// }
+const Suggestions = (props: ISuggestionProps) => {
+    const { suggestions, handleSuggestionClick } = props;
+    const classes = useStyles();
+    return (
+        <div className={classes.suggestions}>
+            <List navigationMode='items'>
+                {suggestions.map((suggestion) => (
+                    <ListItem
+                        key={suggestion}
+                        className={classes.suggestionItem}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                        {suggestion}
+                    </ListItem>
+                ))}
+            </List>
+        </div>
+    );
+}
 
 
 createRoot(document.getElementById("root")!).render(
