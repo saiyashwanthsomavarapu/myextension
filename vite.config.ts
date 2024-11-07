@@ -8,6 +8,7 @@ export default defineConfig({
     outDir: "out/webview-ui",
     rollupOptions: {
       input: {
+        initialize: path.resolve(__dirname, "src/webview-ui/Configuration.tsx"),
         sidebar: path.resolve(__dirname, "src/webview-ui/Sidebar.tsx"),
         chatlayout: path.resolve(__dirname, "src/webview-ui/ChatLayout.tsx"),
         result: path.resolve(__dirname, "src/webview-ui/Result.tsx"),

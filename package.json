@@ -10,7 +10,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:higway-sidebar-view"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
@@ -36,17 +38,40 @@
       "higway-sidebar-view": [
         {
           "type": "webview",
+          "id": "initialize-yml",
+          "name": "Configuration",
+          "icon": "media/productivity-expert-iconart.svg",
+          "contextualTitle": "configuration",
+          "when": "!yamlFilePathSet"
+        },
+        {
+          "type": "webview",
           "id": "higway-sidebar",
           "name": "Nudge",
           "icon": "media/productivity-expert-iconart.svg",
-          "contextualTitle": "Nudge"
+          "contextualTitle": "Nudge",
+          "when": "yamlFilePathSet"
         },
         {
           "type": "webview",
           "id": "chat-layout",
           "name": "Chat",
           "icon": "media/productivity-expert-iconart.svg",
-          "contextualTitle": "Nudge"
+          "contextualTitle": "Nudge",
+          "when": "yamlFilePathSet"
+        }
+      ]
+    },
+    "menus": {
+      
+      "view/item/context": [
+        {
+          "command": "nudge.selectYAMLFile",
+          "when": "view == nodeDependencies && viewItem == dependency",
+          "group": "inline"
+        },
+        {
+          "command": "nudge.selectYAMLFile"
         }
       ]
     },
@@ -54,22 +79,6 @@
       {
         "command": "nudge.selectYAMLFile",
         "title": "Select YAML File from Workspace"
-      },
-      {
-        "command": "nudge.updateGlobalState",
-        "title": "Update Global State"
-      },
-      {
-        "command": "nudge.getGlobalState",
-        "title": "Get Global State"
-      },
-      {
-        "command": "nudge.broadcastMessage",
-        "title": "Broadcast Message"
-      },
-      {
-        "command": "nudge.receiveMessage",
-        "title": "Receive Message"
       }
     ]
   },

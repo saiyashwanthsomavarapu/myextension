@@ -87,12 +87,6 @@ export class SidebarPanel1 implements WebviewViewProvider {
       }
     });
 
-    // Listen for global updates sent from the main extension
-    this._context.subscriptions.push(
-      commands.registerCommand("nudge.receiveMessage", (data) => {
-        webview.postMessage({ command: "update", payload: data });
-      })
-    );
   }
 
   private async _broadcastMessage(data: any) {

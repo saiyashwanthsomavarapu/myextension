@@ -7,15 +7,23 @@ import { selectYAMLFilePath } from "./fileOperations";
 import { SidebarPanel2 } from "./panels/Sidebar/Panel2";
 import { ResultPanel } from "./panels/Sidebar/ResultPanel";
 import { getGlobalState, storeGlobalState } from "utils";
+import { InitializePanel } from "panels/Sidebar/InitializePanel";
 
 let disposables: Disposable[] = [];
 
 export function activate(context: ExtensionContext) {
   // Sidebar view
+  const initializePanel = new InitializePanel(context.extensionUri); // InitializePanel
   const sidebarPanel1 = new SidebarPanel1(context.extensionUri, context);
   const sidebarPanel2 = new SidebarPanel2(context.extensionUri, context);
   const resultPanel = new ResultPanel(context.extensionUri, context);
+  const newFilePath = vscode.workspace.getConfiguration().get<string>('config.yamlFilePath');
+  // Refresh the sidebar when the YAML file path is modified
+  showSidebarWebview(newFilePath !== '');
 
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider("initialize-yml", initializePanel)
+  );
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider("higway-sidebar", sidebarPanel1)
   );
@@ -56,13 +64,18 @@ export function activate(context: ExtensionContext) {
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("config.yamlFilePath")) {
-        // Refresh the sidebar when the YAML file path is modified
+        const newFilePath = vscode.workspace.getConfiguration().get<string>('config.yamlFilePath');
         sidebarPanel1.refresh();
         sidebarPanel2.refresh();
-        resultPanel.refresh();
+        showSidebarWebview(newFilePath !== '');
       }
     })
   );
+}
+
+function showSidebarWebview(yamlFilePath: boolean) {
+  console.log(yamlFilePath);
+    vscode.commands.executeCommand('setContext', 'yamlFilePathSet', yamlFilePath);
 }
 
 // this method is called when your extension is deactivated
