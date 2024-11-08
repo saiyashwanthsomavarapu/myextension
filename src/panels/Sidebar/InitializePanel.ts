@@ -5,9 +5,16 @@ import {
   Uri,
   window,
   Webview,
+  workspace,
+  ConfigurationTarget,
 } from "vscode";
 import { selectYAMLFilePath } from "../../fileOperations";
 import { getUri, getNonce } from "../../utils"; // Helper functions for nonce and URIs
+import * as path from 'path';
+
+
+const ymlFilePath = path.join(__dirname, 'config.yaml');
+// import * as yaml from "../../config.yaml";
 
 export class InitializePanel implements WebviewViewProvider {
   private _view?: WebviewView;
@@ -74,11 +81,16 @@ export class InitializePanel implements WebviewViewProvider {
 
   // Listen for messages from the React component in the sidebar
   private _setMessageListener(webview: Webview) {
-    webview.onDidReceiveMessage((message: any) => {
-      const command = message.command;
-      if (command === "setYmlPath") {
+    webview.onDidReceiveMessage(async (message: any) => {
+      const {command, payload} = message;
+      if (command === "config") {
         console.log(command);
-        commands.executeCommand("nudge.selectYAMLFile", selectYAMLFilePath);
+        const config = workspace.getConfiguration("config");
+        await config.update("yamlFilePath",ymlFilePath, ConfigurationTarget.Global);
+        await config.update("userId", payload.userId, ConfigurationTarget.Global);
+        await config.update("appId", payload.appId, ConfigurationTarget.Global);
+        window.showInformationMessage(`User Id and App Id  successfully updated.`);
+        // commands.executeCommand("nudge.selectYAMLFile", selectYAMLFilePath);
       }
     });
   }

@@ -22,6 +22,16 @@
           "type": "string",
           "default": "",
           "description": "The path to the YAML configuration file within the workspace"
+        },
+        "config.userId": {
+          "type": "string",
+          "default": "",
+          "description": "User ID"
+        },
+        "config.appId": {
+          "type": "string",
+          "default": "",
+          "description": "AppId"
         }
       }
     },
@@ -63,7 +73,6 @@
       ]
     },
     "menus": {
-      
       "view/item/context": [
         {
           "command": "nudge.selectYAMLFile",
@@ -86,8 +95,9 @@
     "webview:build": "npm run compile && npm build",
     "vite:build": "vite build",
     "vscode:prepublish": "npm run compile",
+    "copy:yaml": "cp src/config.yaml out/",
     "package": "vsce package",
-    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "compile": "npm run copy:yaml && npm run check-types && npm run lint && node esbuild.js",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "check-types": "tsc --noEmit",

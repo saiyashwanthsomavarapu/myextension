@@ -30,7 +30,7 @@ export async function readYAMLFile(webview: Webview) {
         webview.postMessage({
           command: "services",
           payload: {
-            appId: data.appId,
+            appId: workspace.getConfiguration().get<string>('config.appId'),
             services: data.serviceNames,
             apiEndpoints: data.apiEndpoints,
           },

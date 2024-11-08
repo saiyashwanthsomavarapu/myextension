@@ -5,7 +5,7 @@ import { ExtensionContext, Disposable } from "vscode";
 import { SidebarPanel1 } from "./panels/Sidebar/Panel1";
 import { selectYAMLFilePath } from "./fileOperations";
 import { SidebarPanel2 } from "./panels/Sidebar/Panel2";
-import { ResultPanel } from "./panels/Sidebar/ResultPanel";
+// import { ResultPanel } from "./panels/Sidebar/ResultPanel";
 import { getGlobalState, storeGlobalState } from "utils";
 import { InitializePanel } from "panels/Sidebar/InitializePanel";
 
@@ -16,10 +16,9 @@ export function activate(context: ExtensionContext) {
   const initializePanel = new InitializePanel(context.extensionUri); // InitializePanel
   const sidebarPanel1 = new SidebarPanel1(context.extensionUri, context);
   const sidebarPanel2 = new SidebarPanel2(context.extensionUri, context);
-  const resultPanel = new ResultPanel(context.extensionUri, context);
-  const newFilePath = vscode.workspace.getConfiguration().get<string>('config.yamlFilePath');
+  // const resultPanel = new ResultPanel(context.extensionUri, context);
   // Refresh the sidebar when the YAML file path is modified
-  showSidebarWebview(newFilePath !== '');
+  showSidebarWebview();
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider("initialize-yml", initializePanel)
@@ -30,9 +29,9 @@ export function activate(context: ExtensionContext) {
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider("chat-layout", sidebarPanel2)
   );
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider("result", resultPanel)
-  );
+  // context.subscriptions.push(
+  //   vscode.window.registerWebviewViewProvider("result", resultPanel)
+  // );
 
   // Select yml file path
   context.subscriptions.push(
@@ -57,25 +56,27 @@ export function activate(context: ExtensionContext) {
   // Broadcast message
   context.subscriptions.push(
     vscode.commands.registerCommand("nudge.broadcastMessage", (data) => {
-      resultPanel.refresh();
+      // resultPanel.refresh();
     })
   );
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("config.yamlFilePath")) {
-        const newFilePath = vscode.workspace.getConfiguration().get<string>('config.yamlFilePath');
+      if (e.affectsConfiguration("config.yamlFilePath") || e.affectsConfiguration("config.userId") || e.affectsConfiguration("config.appId")) {
         sidebarPanel1.refresh();
         sidebarPanel2.refresh();
-        showSidebarWebview(newFilePath !== '');
+        showSidebarWebview();
       }
     })
   );
 }
 
-function showSidebarWebview(yamlFilePath: boolean) {
-  console.log(yamlFilePath);
-    vscode.commands.executeCommand('setContext', 'yamlFilePathSet', yamlFilePath);
+function showSidebarWebview() {
+  const newFilePath = vscode.workspace.getConfiguration().get<string>('config.yamlFilePath');
+  const userId = vscode.workspace.getConfiguration().get<string>('config.userId');
+  const appId = vscode.workspace.getConfiguration().get<string>('config.appId');
+  // Refresh the sidebar when the YAML file path is modified
+  vscode.commands.executeCommand('setContext', 'yamlFilePathSet', newFilePath !== '' && userId !== '' && appId !== '');
 }
 
 // this method is called when your extension is deactivated
