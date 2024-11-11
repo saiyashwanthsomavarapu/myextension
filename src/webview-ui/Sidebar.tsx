@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { createRoot } from "react-dom/client";
 import {
     TableBody,
     TableCell,
@@ -8,8 +7,6 @@ import {
     TableHeader,
     TableHeaderCell,
     TableCellLayout,
-    FluentProvider,
-    webDarkTheme,
     makeStyles,
     Button,
     Input,
@@ -20,6 +17,7 @@ import { SelectBox } from "./components/SelectBox";
 import { IColumnDefinition, model } from "./models/model";
 import { rootStyles } from "./assets/root.styles";
 import { ErrorComponent, IError } from "./components/ErrorComponent";
+import { Initialize } from "./initialize";
 
 const styles = makeStyles({
     root: {
@@ -46,7 +44,7 @@ function Sidebar() {
         appId: string
     }>({
         query: "",
-        appId: ""
+        appId: "",
     });
     const [error, setError] = useState<IError>({
         message: "",
@@ -64,18 +62,17 @@ function Sidebar() {
 
     const style = styles();
     const rootStyle = rootStyles();
-    const primaryColor = getComputedStyle(document.body).getPropertyValue(
-        "--primary-color"
-    );
-    const backgroundColor = getComputedStyle(document.body).getPropertyValue(
-        "--background-color"
-    );
+
 
     useEffect(() => {
         const savedState = window.vscode.getState();
         console.log('useState', savedState)
         if (savedState) {
             setYmlData(savedState.services);
+            setDynatraceValues({
+                ...dynatraceValues,
+                appId: savedState.appId
+            })
             setApiEndpoints(savedState.apiEndpoints);
         }
         window.addEventListener("message", (event) => {
@@ -91,6 +88,10 @@ function Sidebar() {
             if (command === "services") {
                 window.vscode.setState(payload);
                 setApiEndpoints(payload.apiEndpoints);
+                setDynatraceValues({
+                    ...dynatraceValues,
+                    appId: payload.appId
+                })
                 setYmlData(payload.services);
             }
             if (command === "error") {
@@ -194,6 +195,7 @@ function Sidebar() {
                                     <Input
                                         placeholder={"App ID"}
                                         name={"AppId"}
+                                        value={dynatraceValues.appId}
                                         onChange={(event) =>
                                             setDynatraceValues({
                                                 ...dynatraceValues,
@@ -260,10 +262,4 @@ function Sidebar() {
     );
 }
 
-createRoot(document.getElementById("root")!).render(
-    <React.StrictMode>
-        <FluentProvider theme={webDarkTheme}>
-            <Sidebar />
-        </FluentProvider>
-    </React.StrictMode>
-);
+Initialize(Sidebar);

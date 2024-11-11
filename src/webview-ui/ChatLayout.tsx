@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Combobox, ComboboxProps, FluentProvider, Input, makeStyles, Option, OptionOnSelectData, RadioGroupOnChangeData, useComboboxFilter, webDarkTheme } from '@fluentui/react-components';
+import React, { useEffect, useRef, useState } from 'react';
+import Messages from './components/Messages';
+import { Button, Input, RadioGroupOnChangeData } from '@fluentui/react-components';
 import { SendRegular } from '@fluentui/react-icons';
 import { List, ListItem } from '@fluentui/react-list-preview';
-import { createRoot } from 'react-dom/client';
 import { apiRequest } from './utils';
-import Messages from './components/Messages';
+import { useStyles } from './styles/chatLayout.styles';
 import './main.css';
-import { useStyles } from './ChatLayout.styles';
+import { Initialize } from './initialize';
 
 interface IMessage {
     text?: string;
@@ -45,11 +45,24 @@ const ChatLayout = () => {
     //     setInputValue(data.optionText ?? "");
     // };
 
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Scroll to the bottom (newest message) whenever messages change
+    useEffect(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
+      }
+    }, [messages]);
+
     useEffect(() => {
         const savedState = window.vscode.getState();
         console.log('useState', savedState)
         if (savedState) {
             setYmlData(savedState.services);
+            setDynatraceValues({
+                ...dynatraceValues,
+                appId: savedState.appId
+            })
             setApiEndpoints(savedState.apiEndpoints);
         }
 
@@ -68,6 +81,10 @@ const ChatLayout = () => {
             if (command === "services") {
                 window.vscode.setState(payload);
                 setApiEndpoints(payload.apiEndpoints);
+                setDynatraceValues({
+                    ...dynatraceValues,
+                    appId: payload.appId
+                })
                 setYmlData(payload.services);
             }
         });
@@ -76,26 +93,27 @@ const ChatLayout = () => {
         };
     }, []);
 
-    // const handleInputChange = (value: string) => {
-    //     setInputValue(value);
-    //     if (value === '@') {
-    //         setShowSuggestions(true); // Show initial suggestions on "@"
-    //         setFilteredSuggestions(suggestions);
-    //     } else if (value.startsWith('@dynatrace:')) {
-    //         setShowSuggestions(true); // Show Dynatrace commands on selecting "@dynatrace"
-    //     } else {
-    //         setShowSuggestions(false); // Hide suggestions otherwise
-    //     }
-    // };
     function extractAtSymbols(input: string): string[] {
         return input.match(/@\w*/g) || [];
+    }
+
+    const setSuggestions = (service: string): Array<string> => {
+        console.log(service);
+        if (ymlData[service].commands) {
+            return ymlData[service].commands.map((command: { commandName: string; }) => command.commandName);
+        } else if (ymlData[service].requestInput) {
+            return ['Enter the following parameters: ' + ymlData[service].requestInput.join(', ') + ' with comma separated values'];
+        } else {
+            [];
+        }
+        return [];
     }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         console.log(value, value.charAt(value.length - 1) === ' ');
         setInputValue(value);
-        setValues(extractAtSymbols(value));
+        // setValues(extractAtSymbols(value));
 
         const atIndex = value.lastIndexOf('@');
         const colonIndex = value.lastIndexOf(':');
@@ -124,11 +142,7 @@ const ChatLayout = () => {
         else if (suggestions.includes(service) && !spaceAfterColon) {
             console.log('3')
             setIsDynatraceSelected(true);
-            if (ymlData[service].commands) {
-                setFilteredSuggestions(ymlData[service].commands.map((command: { commandName: string; }) => command.commandName));
-            } else {
-                setFilteredSuggestions([]);
-            }
+            setFilteredSuggestions(setSuggestions(service));
             setShowSuggestions(true);
         }
         // Scenario 4: Space added after "@dynatrace:", hide the suggestions
@@ -162,14 +176,23 @@ const ChatLayout = () => {
 
     const handleSuggestionClick = (suggestion: string) => {
         const value = inputValue !== '' ? inputValue : '';
-        if (isDynatraceSelected) {
-            setInputValue(`${value}${suggestion}`);
+        if (isDynatraceSelected && value.includes(':')) {
+            setInputValue(`${value.slice(0, value.lastIndexOf(':'))}:${suggestion}`);
+            setValues([...values, `${value.slice(0, value.lastIndexOf(':'))}:${suggestion}`])
             setShowSuggestions(false);
         } else {
             setInputValue(`${value}${suggestion}:`);
             setShowSuggestions(false);
         }
+        setFocus(true)
     };
+    const extractCommandName = (input: string): string => {
+        return input.split(':')[0];
+    }
+
+    const extractOption = (input: string): string => {
+        return input.split(':')[1];
+    }
 
     const handleSendMessage = () => {
         const currentValue = inputValue.slice(1);
@@ -181,9 +204,9 @@ const ChatLayout = () => {
         setMessages((prevMessages) => [...prevMessages, newUserMessage]);
         setInputValue('');
         setShowSuggestions(false);
-        if (suggestions.includes(currentValue)) {
-            // setSelectedService(currentValue);
-            if (newUserMessage.text === '@dynatrace') {
+        if (suggestions.includes(currentValue) && values.length === 0) {
+            setSelectedService(currentValue);
+            if (extractCommandName(inputValue) === '@dynatrace') {
                 setMessages((prevMessages) => [...prevMessages, {
                     sender: 'bot',
                     type: 'radio',
@@ -201,6 +224,7 @@ const ChatLayout = () => {
                 }])
             }
         } else {
+            const selectedService = extractCommandName(currentValue);
             if (selectedService === 'blazemeter') {
                 const value = inputValue.split(',').map(item => item.trim());
                 apiRequest(
@@ -216,11 +240,13 @@ const ChatLayout = () => {
             }
 
             if (selectedService === 'dynatrace') {
-                const value = ymlData.dynatrace.commands.find((command: { commandName: string; }) => command.commandName === dynatraceValues.query);
+                console.log(dynatraceValues)
+                const value = ymlData.dynatrace.commands.find((command: { commandName: string; }) => command.commandName === (dynatraceValues.query === '' ? extractOption(currentValue) : dynatraceValues.query));
                 setDynatraceValues({
                     ...dynatraceValues,
                     appId: inputValue
                 })
+                console.log(selectedService, value);
                 apiRequest({
                     apiQuery: apiEndpoints[selectedService],
                     serviceName: selectedService,
@@ -231,15 +257,9 @@ const ChatLayout = () => {
                 });
             }
         }
+
+        setValues([])
     };
-
-
-    // const handleSuggestionClick = (suggestion: string) => {
-    //     const atIndex = inputValue.lastIndexOf('@');
-    //     const newValue = inputValue.slice(0, atIndex + 1) + suggestion;
-    //     setInputValue(newValue);
-    //     setShowSuggestions(false);
-    // };
 
     const handleRadioChange = (_: React.FormEvent<HTMLDivElement>, data: RadioGroupOnChangeData) => {
         if (selectedService === 'dynatrace') {
@@ -283,15 +303,20 @@ const ChatLayout = () => {
 
     return (
         <div className={classes.root}>
-            {/* Chat messages window */}
-            <Messages messages={messages} handleRadio={handleRadioChange} />
+            {/* Messages container with scrollable content */}
+            <div className={classes.messagesContainer} ref={messagesEndRef}>
+                <Messages messages={messages} handleRadio={handleRadioChange} />
+            </div>
 
             {/* Show suggestions if applicable */}
             {showSuggestions && filteredSuggestions.length > 0 && (
-                <Suggestions suggestions={filteredSuggestions} handleSuggestionClick={handleSuggestionClick} />
+                <Suggestions
+                    suggestions={filteredSuggestions}
+                    handleSuggestionClick={handleSuggestionClick}
+                />
             )}
-            {JSON.stringify(values)}
-            {/* Input box and send button */}
+
+            {/* Fixed input box and send button */}
             <div className={classes.inputWrapper}>
                 <Input
                     name="chatInput"
@@ -301,21 +326,16 @@ const ChatLayout = () => {
                     value={inputValue}
                     onChange={(e) => handleInputChange(e)}
                 />
-                {/* <Combobox
-                    placeholder="Type your message..."
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter' && inputValue.trim()) {
-                            handleSendMessage();
-                        }
-                    }}
-                    onOptionSelect={onOptionSelect}
-                >
-                    {children}
-                </Combobox> */}
-                <Button className={classes.btn} disabled={!inputValue} appearance="primary" icon={<SendRegular />} onClick={handleSendMessage} />
+                <Button
+                    className={classes.btn}
+                    disabled={!inputValue}
+                    appearance="primary"
+                    icon={<SendRegular />}
+                    onClick={handleSendMessage}
+                />
             </div>
         </div>
+
     );
 };
 
@@ -344,12 +364,4 @@ const Suggestions = (props: ISuggestionProps) => {
     );
 }
 
-
-createRoot(document.getElementById("root")!).render(
-    <React.StrictMode>
-        <FluentProvider theme={webDarkTheme}>
-            <ChatLayout />
-        </FluentProvider>
-    </React.StrictMode>
-);
-
+Initialize(ChatLayout);

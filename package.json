@@ -10,7 +10,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:higway-sidebar-view"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
@@ -20,6 +22,16 @@
           "type": "string",
           "default": "",
           "description": "The path to the YAML configuration file within the workspace"
+        },
+        "config.userId": {
+          "type": "string",
+          "default": "",
+          "description": "User ID"
+        },
+        "config.appId": {
+          "type": "string",
+          "default": "",
+          "description": "AppId"
         }
       }
     },
@@ -36,17 +48,39 @@
       "higway-sidebar-view": [
         {
           "type": "webview",
+          "id": "initialize-yml",
+          "name": "Configuration",
+          "icon": "media/productivity-expert-iconart.svg",
+          "contextualTitle": "configuration",
+          "when": "!yamlFilePathSet"
+        },
+        {
+          "type": "webview",
           "id": "higway-sidebar",
           "name": "Nudge",
           "icon": "media/productivity-expert-iconart.svg",
-          "contextualTitle": "Nudge"
+          "contextualTitle": "Nudge",
+          "when": "yamlFilePathSet"
         },
         {
           "type": "webview",
           "id": "chat-layout",
           "name": "Chat",
           "icon": "media/productivity-expert-iconart.svg",
-          "contextualTitle": "Nudge"
+          "contextualTitle": "Nudge",
+          "when": "yamlFilePathSet"
+        }
+      ]
+    },
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "nudge.selectYAMLFile",
+          "when": "view == nodeDependencies && viewItem == dependency",
+          "group": "inline"
+        },
+        {
+          "command": "nudge.selectYAMLFile"
         }
       ]
     },
@@ -61,8 +95,9 @@
     "webview:build": "npm run compile && npm build",
     "vite:build": "vite build",
     "vscode:prepublish": "npm run compile",
+    "copy:yaml": "cpx src/config.yaml out/",
     "package": "vsce package",
-    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "compile": "npm run copy:yaml && npm run check-types && npm run lint && node esbuild.js",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "check-types": "tsc --noEmit",
@@ -78,6 +113,7 @@
     "@vitejs/plugin-react": "^4.3.2",
     "@vscode/test-cli": "^0.0.6",
     "@vscode/test-electron": "^2.3.9",
+    "cpx": "^1.5.0",
     "eslint": "^8.56.0",
     "jest": "^29.7.0",
     "typescript": "^5.3.3",

@@ -21,7 +21,6 @@ function TableComponent(props: ITableProps) {
         <Table
             className={style.table}
             arial-label="Default table"
-            style={{ minWidth: "510px" }}
         >
             <TableHeader>
                 <TableRow>

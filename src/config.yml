@@ -1,5 +1,6 @@
 extension: "nudge"
 userid: 123
+appId: 1234
 serviceNames:
   dynatrace:
     commands:
