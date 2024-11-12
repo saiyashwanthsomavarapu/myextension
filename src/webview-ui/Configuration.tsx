@@ -1,7 +1,7 @@
 import { Button, Input, makeStyles, Text } from '@fluentui/react-components';
 import { Settings24Regular as SettingsIcon } from '@fluentui/react-icons';
 import { Initialize } from './initialize';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { rootStyles } from './assets/root.styles';
 
 const styles = makeStyles({
@@ -10,7 +10,6 @@ const styles = makeStyles({
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        padding: '10px'
     },
     btn: {
         marginTop: '10px'
@@ -18,12 +17,27 @@ const styles = makeStyles({
 });
 function Configuration() {
     const [config, setConfig] = useState({
+        persona: '',
         userId: '',
         appId: '',
     })
     const style = styles();
     const rootStyle = rootStyles();
 
+    useEffect(() => {
+        window.addEventListener("message", (event) => {
+            const { command, payload } = event.data;
+            if (command === "initial") {
+                setConfig({
+                    ...payload,
+                    persona: payload.userPersona 
+                });
+            }
+        });
+        return () => {
+            window.removeEventListener('message', () => { });
+        };
+    },[])
     const handleConfiguration = () => {
         window.vscode.postMessage({ command: "config", payload: config });
 
@@ -62,6 +76,23 @@ function Configuration() {
                     />
                 </div>
             </div>
+            <div className={rootStyle.base}>
+                <div className={rootStyle.field} >
+                    <Input
+                        placeholder={"User persona"}
+                        name={"userPersona"}
+                        value={config.persona}
+                        onChange={(event) =>
+                            setConfig({
+                                ...config,
+                                persona: event.target.value
+                            })
+                        }
+                    />
+                </div>
+            </div>
+            <Text align="justify">Persona - 2nd phase of Nudge</Text>
+
             <Button className={style.btn} appearance="primary" onClick={handleConfiguration}>
                 Configure
             </Button>
