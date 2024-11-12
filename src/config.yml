@@ -1,8 +1,10 @@
 extension: "nudge"
 userid: 123
 appId: 1234
+userpersona: "observability"
 serviceNames:
   dynatrace:
+    persona: 'observability'
     commands:
       - commandName: "Top 5 responses by application"
         queryString: "builtin:service.response.client:splitBy('dt.entity.service'):max:limit(5):fold(max):names"
@@ -10,7 +12,8 @@ serviceNames:
       - commandName: "Top 3 CPU usage by application"
         queryString: "builtin:service.response.client:splitBy('dt.entity.service'):max:limit(3):fold(max):names"
         dimensionName: "serviceName"
-  blazemeter:
+  blazemeter:  
+    persona: 'performance'
     requestInput:
       - workspaceId
       - projectId

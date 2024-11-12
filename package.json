@@ -32,6 +32,11 @@
           "type": "string",
           "default": "",
           "description": "AppId"
+        },
+        "config.persona": {
+          "type": "string",
+          "default": "",
+          "description": "Persona"
         }
       }
     },

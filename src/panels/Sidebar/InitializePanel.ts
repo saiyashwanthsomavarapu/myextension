@@ -10,6 +10,7 @@ import {
 } from "vscode";
 import { getUri, getNonce } from "../../utils"; // Helper functions for nonce and URIs
 import * as path from 'path';
+import { readYAMLFile } from "../../fileOperations";
 
 
 const ymlFilePath = path.join(__dirname, 'config.yaml');
@@ -22,6 +23,7 @@ export class InitializePanel implements WebviewViewProvider {
 
   public async resolveWebviewView(webviewView: WebviewView) {
     this._view = webviewView;
+    const config = workspace.getConfiguration("config");
 
     // Allow scripts to run
     webviewView.webview.options = {
@@ -35,8 +37,22 @@ export class InitializePanel implements WebviewViewProvider {
     // Listen for messages from the webview (React UI)
     this._setMessageListener(webviewView.webview);
 
+    await config.update("yamlFilePath",ymlFilePath, ConfigurationTarget.Global);
+
     // Fetch API data
-    // this.ymlData = await readYAMLFile(this._view.webview);
+    this.ymlData = await readYAMLFile(this._view.webview);
+
+    setTimeout(() => {
+      webviewView.webview.postMessage({
+        command: "initial",
+        payload: {
+          userPersona: this.ymlData.userpersona,
+          appId: this.ymlData.appId,
+          services: this.ymlData.serviceNames,
+          apiEndpoints: this.ymlData.apiEndpoints,
+        },
+      });
+    }, 1000);
   }
 
   public async refresh() {
@@ -81,11 +97,10 @@ export class InitializePanel implements WebviewViewProvider {
   private _setMessageListener(webview: Webview) {
     webview.onDidReceiveMessage(async (message: any) => {
       const {command, payload} = message;
-      if (command === "config") {
-        console.log(command);
+      if (command === "config") {  
         const config = workspace.getConfiguration("config");
-        await config.update("yamlFilePath",ymlFilePath, ConfigurationTarget.Global);
         await config.update("userId", payload.userId, ConfigurationTarget.Global);
+        await config.update("persona", payload.persona, ConfigurationTarget.Global);
         await config.update("appId", payload.appId, ConfigurationTarget.Global);
         window.showInformationMessage(`User Id and App Id  successfully updated.`);
         // commands.executeCommand("nudge.selectYAMLFile", selectYAMLFilePath);
