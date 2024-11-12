@@ -3,18 +3,35 @@ import { Settings24Regular as SettingsIcon } from '@fluentui/react-icons';
 import { Initialize } from './initialize';
 import { useEffect, useState } from 'react';
 import { rootStyles } from './assets/root.styles';
+import { SelectBox } from './components/SelectBox';
+import { ErrorComponent } from "./components/ErrorComponent";
 
 const styles = makeStyles({
     root: {
         backgroundColor: "var(--vscode-activityBar-background)",
-        display: "flex",
+        // display: "flex",
         flexDirection: "column",
         alignItems: "center",
     },
     btn: {
         marginTop: '10px'
+    },
+    infoContainer: {
+        marginTop: '10px'
     }
 });
+
+const options = [
+    {
+        label: 'observability',
+        value: 'observability'
+    },
+    {
+        label: 'performance',
+        value: 'performance'
+    }
+];
+
 function Configuration() {
     const [config, setConfig] = useState({
         persona: '',
@@ -30,14 +47,14 @@ function Configuration() {
             if (command === "initial") {
                 setConfig({
                     ...payload,
-                    persona: payload.userPersona 
+                    persona: payload.userPersona
                 });
             }
         });
         return () => {
             window.removeEventListener('message', () => { });
         };
-    },[])
+    }, [])
     const handleConfiguration = () => {
         window.vscode.postMessage({ command: "config", payload: config });
 
@@ -76,23 +93,20 @@ function Configuration() {
                     />
                 </div>
             </div>
-            <div className={rootStyle.base}>
-                <div className={rootStyle.field} >
-                    <Input
-                        placeholder={"User persona"}
-                        name={"userPersona"}
-                        value={config.persona}
-                        onChange={(event) =>
-                            setConfig({
-                                ...config,
-                                persona: event.target.value
-                            })
-                        }
-                    />
-                </div>
+            <SelectBox
+                label="Select Persona"
+                options={options}
+                value={config.persona}
+                onChange={(event) =>
+                    setConfig({
+                        ...config,
+                        persona: event.target.value
+                    })
+                }
+            />
+            <div className={style.infoContainer}>
+                <ErrorComponent message={'Persona - 2nd phase of Nudge'} intent={'info'} />
             </div>
-            <Text align="justify">Persona - 2nd phase of Nudge</Text>
-
             <Button className={style.btn} appearance="primary" onClick={handleConfiguration}>
                 Configure
             </Button>
