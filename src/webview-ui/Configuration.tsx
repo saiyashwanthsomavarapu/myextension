@@ -29,6 +29,10 @@ const options = [
     {
         label: 'performance',
         value: 'performance'
+    },
+    {
+        label: 'quality',
+        value: 'quality'
     }
 ];
 

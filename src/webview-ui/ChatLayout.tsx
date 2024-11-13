@@ -49,9 +49,9 @@ const ChatLayout = () => {
 
     // Scroll to the bottom (newest message) whenever messages change
     useEffect(() => {
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
-      }
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
+        }
     }, [messages]);
 
     useEffect(() => {
@@ -195,68 +195,72 @@ const ChatLayout = () => {
     }
 
     const handleSendMessage = () => {
-        const currentValue = inputValue.slice(1);
         const newUserMessage: IMessage = {
             sender: 'user',
             type: 'text',
             text: inputValue.trim(),
         };
         setMessages((prevMessages) => [...prevMessages, newUserMessage]);
-        setInputValue('');
-        setShowSuggestions(false);
-        if (suggestions.includes(currentValue) && values.length === 0) {
-            setSelectedService(currentValue);
-            if (extractCommandName(inputValue) === '@dynatrace') {
-                setMessages((prevMessages) => [...prevMessages, {
-                    sender: 'bot',
-                    type: 'radio',
-                    text: inputValue.slice(1),
-                    options: ymlData.dynatrace.commands,
-                }])
-                return;
-            }
+        values.forEach((val) => {
+            console.log(val)
+            const currentValue = val.slice(1);
+            setInputValue('');
+            setShowSuggestions(false);
+            if (suggestions.includes(currentValue) && values.length === 0) {
+                setSelectedService(currentValue);
+                if (extractCommandName(val) === '@dynatrace') {
+                    setMessages((prevMessages) => [...prevMessages, {
+                        sender: 'bot',
+                        type: 'radio',
+                        text: inputValue.slice(1),
+                        options: ymlData.dynatrace.commands,
+                    }])
+                    return;
+                }
 
-            if (newUserMessage.text === '@blazemeter') {
-                setMessages((prevMessages) => [...prevMessages, {
-                    sender: 'bot',
-                    type: 'text',
-                    text: `Enter the following parameters: ${ymlData.blazemeter.requestInput.join(',')} with comma separated values`
-                }])
-            }
-        } else {
-            const selectedService = extractCommandName(currentValue);
-            if (selectedService === 'blazemeter') {
-                const value = inputValue.split(',').map(item => item.trim());
-                apiRequest(
-                    {
+                if (newUserMessage.text === '@blazemeter') {
+                    setMessages((prevMessages) => [...prevMessages, {
+                        sender: 'bot',
+                        type: 'text',
+                        text: `Enter the following parameters: ${ymlData.blazemeter.requestInput.join(',')} with comma separated values`
+                    }])
+                }
+            } else {
+                const selectedService = extractCommandName(currentValue);
+                if (selectedService === 'blazemeter') {
+                    const value = val.split(',').map(item => item.trim());
+                    apiRequest(
+                        {
+                            apiQuery: apiEndpoints[selectedService],
+                            serviceName: selectedService,
+                            queryString: {
+                                workspaceId: value[0],
+                                projectId: value[1],
+                            }
+                        }
+                    )
+                }
+
+                if (selectedService === 'dynatrace') {
+                    console.log(dynatraceValues)
+                    const value = ymlData.dynatrace.commands.find((command: { commandName: string; }) => command.commandName === (dynatraceValues.query === '' ? extractOption(currentValue) : dynatraceValues.query));
+                    setDynatraceValues({
+                        ...dynatraceValues,
+                        appId: inputValue
+                    })
+                    console.log(selectedService, value);
+                    apiRequest({
                         apiQuery: apiEndpoints[selectedService],
                         serviceName: selectedService,
                         queryString: {
-                            workspaceId: value[0],
-                            projectId: value[1],
+                            metricsSelector: value.queryString.replace('$$$', inputValue),
+                            dimensionName: value.dimensionName
                         }
-                    }
-                )
+                    });
+                }
             }
+        })
 
-            if (selectedService === 'dynatrace') {
-                console.log(dynatraceValues)
-                const value = ymlData.dynatrace.commands.find((command: { commandName: string; }) => command.commandName === (dynatraceValues.query === '' ? extractOption(currentValue) : dynatraceValues.query));
-                setDynatraceValues({
-                    ...dynatraceValues,
-                    appId: inputValue
-                })
-                console.log(selectedService, value);
-                apiRequest({
-                    apiQuery: apiEndpoints[selectedService],
-                    serviceName: selectedService,
-                    queryString: {
-                        metricsSelector: value.queryString.replace('$$$', inputValue),
-                        dimensionName: value.dimensionName
-                    }
-                });
-            }
-        }
 
         setValues([])
     };
