@@ -1,4 +1,4 @@
-import { makeStyles, Table, TableBody, TableCell, TableCellLayout, TableHeader, TableHeaderCell, TableRow } from '@fluentui/react-components'
+import { Link, makeStyles, Table, TableBody, TableCell, TableCellLayout, TableHeader, TableHeaderCell, TableRow } from '@fluentui/react-components'
 import React from 'react'
 import { IColumnDefinition } from 'webview-ui/models/model';
 
@@ -37,7 +37,13 @@ function TableComponent(props: ITableProps) {
                     <TableRow key={index}>
                         {headers.map((column: IColumnDefinition) => (
                             <TableCell>
-                                <TableCellLayout>{item[column.fieldName]}</TableCellLayout>
+
+                                {column.type === 'text' && <TableCellLayout> {item[column.fieldName]}</TableCellLayout>}
+                                {column.type === 'link' && <TableCellLayout>
+                                    <Link href={item[column?.linkField || column.fieldName]}>
+                                        click here
+                                    </Link>
+                                </TableCellLayout>}
                             </TableCell>
                         ))}
                     </TableRow>

@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-    TableBody,
-    TableCell,
-    TableRow,
-    Table,
-    TableHeader,
-    TableHeaderCell,
-    TableCellLayout,
     makeStyles,
     Button,
     Input,
@@ -14,10 +7,12 @@ import {
 } from "@fluentui/react-components";
 import "./main.css";
 import { SelectBox } from "./components/SelectBox";
-import { IColumnDefinition, model } from "./models/model";
+import { model } from "./models/model";
 import { rootStyles } from "./assets/root.styles";
 import { ErrorComponent, IError } from "./components/ErrorComponent";
 import { Initialize } from "./initialize";
+import { apiRequest } from "./utils";
+import TableComponent from "./components/TableComponent";
 
 const styles = makeStyles({
     root: {
@@ -38,10 +33,12 @@ const styles = makeStyles({
 
 function Sidebar() {
     const [metricsData, setMetricsData] = useState<any>([]);
-    const [ymlData, setYmlData] = useState<any>([]);
+    const [persona, setPersona] = useState<string>("");
+    const [ymlData, setYmlData] = useState<any>({});
+    const [services, setServices] = useState<any>([]);
     const [dynatraceValues, setDynatraceValues] = useState<{
         query: string;
-        appId: string
+        appId: string;
     }>({
         query: "",
         appId: "",
@@ -54,7 +51,8 @@ function Sidebar() {
     const [blazemeterValue, setBlazemeterValue] = useState<{
         projectId: string;
         workspaceId: string;
-    }>({ projectId: '', workspaceId: '' });
+        appId: string;
+    }>({ projectId: "", workspaceId: "", appId: "" });
     const [apiEndpoints, setApiEndpoints] = useState<{ [key: string]: string }>(
         {}
     );
@@ -63,91 +61,103 @@ function Sidebar() {
     const style = styles();
     const rootStyle = rootStyles();
 
-
     useEffect(() => {
         const savedState = window.vscode.getState();
-        console.log('useState', savedState)
+        console.log("useState", savedState);
         if (savedState) {
-            setYmlData(savedState.services);
-            setDynatraceValues({
-                ...dynatraceValues,
-                appId: savedState.appId
-            })
-            setApiEndpoints(savedState.apiEndpoints);
+            initialize(savedState);
         }
         window.addEventListener("message", (event) => {
             console.log("transformation:", event.data);
             const { command, payload } = event.data;
             if (command === "sendData") {
-                setMetricsData(payload.metrics);
+                if (payload.serviceName === 'dynatrace') {
+                    setMetricsData(payload.metrics.data);
+                } 
+                if(payload.serviceName === 'blazemeter') {
+                    setMetricsData(payload.metrics['AggregateReport']);
+                }
                 setError({
-                    message: payload.metrics.length > 0 ? "" : "Data not found",
-                    intent: 'info'
+                    message: "",
+                    intent: "info",
                 });
             }
             if (command === "services") {
                 window.vscode.setState(payload);
-                setApiEndpoints(payload.apiEndpoints);
-                setDynatraceValues({
-                    ...dynatraceValues,
-                    appId: payload.appId
-                })
-                setYmlData(payload.services);
+                initialize(payload);
             }
             if (command === "error") {
                 setMetricsData([]);
                 setError({
                     message: payload.error,
-                    intent: 'error'
+                    intent: "error",
                 });
             }
             setLoading(false);
         });
     }, []);
 
+    const initialize = (payload: any) => {
+        console.log("payload", payload);
+        setYmlData(payload);
+        setApiEndpoints(payload.apiEndpoints);
+        setPersona(payload.userPersona);
+        setDynatraceValues({
+            ...dynatraceValues,
+            appId: payload.appId.toString(),
+        });
+        setBlazemeterValue({
+            ...blazemeterValue,
+            appId: payload.appId.toString(),
+        });
+        setServices(payload.services)
+    }
+
     const handleSubmit = () => {
         setLoading(true);
         if (selectService === "dynatrace") {
-            const value = ymlData.dynatrace.commands.find((command: { queryString: string; }) => command.queryString === dynatraceValues.query);
-            window.vscode.postMessage({
-                command: "fetchApiData",
-                payload: {
-                    serviceName: selectService,
-                    apiQuery: apiEndpoints[selectService],
-                    queryString: {
-                        metricsSelector: dynatraceValues.query.replace('$$$', dynatraceValues.appId),
-                        dimensionName: value.dimensionName
-                    }
+            const value = services.dynatrace.commands.find(
+                (command: { queryString: string }) =>
+                    command.queryString === dynatraceValues.query
+            );
+            apiRequest({
+                serviceName: selectService,
+                apiQuery: apiEndpoints[selectService],
+                queryString: {
+                    metricsSelector: dynatraceValues.query.replace(
+                        "$$$",
+                        dynatraceValues.appId
+                    ),
+                    dimensionName: value.dimensionName,
                 },
             });
             setDynatraceValues({
                 query: "",
-                appId: ""
+                appId: "",
             });
         }
         if (selectService === "blazemeter") {
-            window.vscode.postMessage({
-                command: "fetchApiData",
-                payload: {
-                    serviceName: selectService,
-                    apiQuery: apiEndpoints[selectService],
-                    queryString: blazemeterValue,
+            apiRequest({
+                serviceName: selectService,
+                apiQuery: apiEndpoints[selectService],
+                queryString: {
+                    ...blazemeterValue,
+                    persona,
+                    userId: ymlData.userId.toString()
                 },
             });
-            setBlazemeterValue({ projectId: '', workspaceId: '' });
-        };
-
-    }
+            setBlazemeterValue({ projectId: "", workspaceId: "", appId: "" });
+        }
+    };
 
     function validateInput() {
-
         // Validate query
         if (!dynatraceValues.query) {
             return false;
         }
 
         // Validate appId only if $$$ is present in query
-        if (dynatraceValues.query.includes('$$$')) {
+        if (dynatraceValues.query.includes("$$$")) {
             if (!dynatraceValues.appId) {
                 return false;
             }
@@ -156,23 +166,29 @@ function Sidebar() {
         return true;
     }
 
-
     const handelSelectService = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectServices(event.target.value);
         setMetricsData([]);
-    }
+    };
 
-    const isBlazemeterValid = Object.values(blazemeterValue).every(value => value.trim() !== '');
-    const isDynatraceValid = validateInput()
+    const isBlazemeterValid = Object.values(blazemeterValue).every(
+        (value) => value.trim() !== ""
+    );
+    const isDynatraceValid = validateInput();
 
-
-    const isSubmitDisabled = selectService === "blazemeter" ? !isBlazemeterValid : selectService === "dynatrace" ? !isDynatraceValid : true;
+    const isSubmitDisabled =
+        selectService === "blazemeter"
+            ? !isBlazemeterValid
+            : selectService === "dynatrace"
+                ? !isDynatraceValid
+                : true;
 
     return (
         <div className={style.root}>
+            {JSON.stringify(blazemeterValue)}
             <SelectBox
                 label="Select service"
-                options={Object.keys(ymlData).map((key) => ({
+                options={Object.keys(services).map((key) => ({
                     label: key,
                     value: key,
                 }))}
@@ -182,19 +198,27 @@ function Sidebar() {
                 <>
                     <SelectBox
                         label="Select command"
-                        options={ymlData[selectService].commands.map((command: any) => ({
+                        options={services[selectService].commands.map((command: any) => ({
                             label: command.commandName,
                             value: command.queryString,
                         }))}
-                        onChange={(event) => setDynatraceValues((prev) => ({ ...prev, query: event.target.value }))}
+                        onChange={(event) =>
+                            setDynatraceValues((prev) => ({
+                                ...prev,
+                                query: event.target.value,
+                            }))
+                        }
                     />
-                    {ymlData[selectService].commands.map((command: any) =>
-                        command.queryString === dynatraceValues.query && command.queryString.includes('$$$') ? (
+                    {services[selectService].commands.map((command: any) =>
+                        command.queryString === dynatraceValues.query &&
+                            command.queryString.includes("$$$") ? (
                             <div className={rootStyle.base}>
-                                <div className={rootStyle.field} >
+                                <div className={rootStyle.field}>
                                     <Input
+                                        className={rootStyle.hideArrows}
                                         placeholder={"App ID"}
                                         name={"AppId"}
+                                        type="number"
                                         value={dynatraceValues.appId}
                                         onChange={(event) =>
                                             setDynatraceValues({
@@ -210,13 +234,16 @@ function Sidebar() {
                 </>
             )}
             {selectService === "blazemeter" &&
-                ymlData[selectService].requestInput.map((input: string) => (
+                services[selectService].requestInput.map((input: string) => (
                     <div className={rootStyle.base}>
                         <div className={rootStyle.field} key={input}>
                             <Input
                                 key={input}
                                 placeholder={input}
                                 name={input}
+                                className={rootStyle.hideArrows}
+                                type="number"
+                                value={blazemeterValue[input as keyof typeof blazemeterValue]}
                                 onChange={(event) =>
                                     setBlazemeterValue({
                                         ...blazemeterValue,
@@ -227,37 +254,21 @@ function Sidebar() {
                         </div>
                     </div>
                 ))}
-            <Button className={style.btn} appearance="primary" disabled={isSubmitDisabled} onClick={handleSubmit}>
+            <Button
+                className={style.btn}
+                appearance="primary"
+                disabled={isSubmitDisabled}
+                onClick={handleSubmit}
+            >
                 Submit
             </Button>
             {loading && <Spinner className={style.spinner} size="large" />}
-            {metricsData.length > 0 && <Table
-                className={style.table}
-                arial-label="Default table"
-                style={{ minWidth: "510px" }}
-            >
-                <TableHeader>
-                    <TableRow>
-                        {
-                            model[selectService as keyof typeof model].map((column: IColumnDefinition) => (
-                                <TableHeaderCell>{column.name}</TableHeaderCell>
-                            ))
-                        }
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {metricsData.map((metrics: any, index: number) => (
-                        <TableRow key={index}>
-                            {model[selectService as keyof typeof model].map((column: IColumnDefinition) => (
-                                <TableCell>
-                                    <TableCellLayout>{metrics[column.fieldName]}</TableCellLayout>
-                                </TableCell>
-                            ))}
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>}
-            {error.message !== '' && <ErrorComponent message={error.message} intent={error.intent} />}
+            {metricsData.length > 0 && (
+               <TableComponent body={metricsData} headers={model[selectService as keyof typeof model]} />
+            )}
+            {error.message !== "" && (
+                <ErrorComponent message={error.message} intent={error.intent} />
+            )}
         </div>
     );
 }

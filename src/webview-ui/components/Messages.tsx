@@ -8,7 +8,7 @@ const useStyles = makeStyles({
         display: "flex",
         flexDirection: "column",
         overflowY: "auto",
-        maxHeight: "100vh",
+        // maxHeight: "100vh",
         padding: "10px",
         gap: "10px",
         // border: "1px solid var(--vscode-input-border)",
@@ -18,7 +18,7 @@ const useStyles = makeStyles({
     message: {
         padding: "10px",
         borderRadius: "10px",
-        maxWidth: "70%",
+        maxWidth: "100%",
         wordBreak: "break-word",
         boxSizing: "border-box",
     },
@@ -29,8 +29,8 @@ const useStyles = makeStyles({
     },
     botMessage: {
         alignSelf: "flex-start",
-        backgroundColor: "var(--vscode-list-hoverBackground)",
-        color: "var(--vscode-input-foreground)",
+        // backgroundColor: "var(--vscode-list-hoverBackground)",
+        // color: "var(--vscode-input-foreground)",
     },
     tableContainer: {
         border: "1px solid var(--vscode-input-border)",

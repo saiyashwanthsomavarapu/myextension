@@ -17,6 +17,7 @@ serviceNames:
     requestInput:
       - workspaceId
       - projectId
+      - appId
 apiEndpoints:
   dynatrace: "https://dev.nudgegenai.mlc.cld1np.thehartford.com/dynatrace"
   blazemeter: "https://dev.nudgegenai.mlc.cld1np.thehartford.com/blazemeter"

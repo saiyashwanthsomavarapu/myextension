@@ -127,21 +127,18 @@ export class SidebarPanel2 implements WebviewViewProvider {
       };
       const response = await axios.request(config);
       console.log(apiCall);
+      const responsePayload = {
+        metrics: response.data,
+        serviceName: apiCall.serviceName,
+      };
       // Send the data back to the React component
       setTimeout(() => {
         this._view?.webview.postMessage({
           command: "sendData",
-          payload: {
-            metrics: response.data.data,
-            serviceName: apiCall.serviceName,
-          },
+          payload: responsePayload
         });
       }, 1000);
-      console.log("API Response:", response.data.data);
-      const responsePayload = {
-        metrics: response.data.data,
-        serviceName: apiCall.serviceName,
-      };
+      console.log("API Response:", response.data);
       storeGlobalState(this._context, "update", responsePayload);
       // Broadcast the data to other views
       await this._broadcastMessage({

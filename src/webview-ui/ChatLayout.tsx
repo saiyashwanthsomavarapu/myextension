@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Messages from './components/Messages';
 import { Button, Input, RadioGroupOnChangeData } from '@fluentui/react-components';
 import { SendRegular } from '@fluentui/react-icons';
@@ -20,7 +20,8 @@ interface IMessage {
 const ChatLayout = () => {
     const classes = useStyles();
     // const [metricsData, setMetricsData] = useState<any>([]);
-    const [ymlData, setYmlData] = useState<any>([]);
+    const [ymlData, setYmlData] = useState<any>({});
+    const [services, setServices] = useState<any>([]);
     const [dynatraceValues, setDynatraceValues] = useState<{
         query: string;
         appId: string
@@ -34,15 +35,26 @@ const ChatLayout = () => {
     const [inputValue, setInputValue] = useState('');
     const [messages, setMessages] = useState<IMessage[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const [suggestions] = useState(['dynatrace', 'blazemeter']);
+    const [suggestions, setSuggestions] = useState(['dynatrace', 'blazemeter']);
     const [selectedService, setSelectedService] = useState<string>('');
     const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Scroll to the bottom (newest message) whenever messages change
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
+        }
+    }, [messages]);
+
 
     useEffect(() => {
         const savedState = window.vscode.getState();
         console.log('useState', savedState)
         if (savedState) {
-            setYmlData(savedState.services);
+            setYmlData(savedState);
+            setServices(savedState.services);
+            setSuggestions(Object.keys(savedState.services))
             setDynatraceValues({
                 ...dynatraceValues,
                 appId: savedState.appId
@@ -55,21 +67,24 @@ const ChatLayout = () => {
             const { command, payload } = event.data;
             if (command === "sendData") {
                 // setMetricsData(payload.metrics);
+
                 setMessages((prevMessages) => [...prevMessages, {
                     sender: 'bot',
                     type: 'table',
                     text: payload.serviceName,
-                    options: payload.metrics
+                    options: payload.serviceName === 'dynatrace' ? payload.metrics.data : payload.metrics['AggregateReport']
                 }]);
             }
             if (command === "services") {
                 window.vscode.setState(payload);
+                setYmlData(payload);
+                setSuggestions(Object.keys(payload.services))
                 setApiEndpoints(payload.apiEndpoints);
                 setDynatraceValues({
                     ...dynatraceValues,
                     appId: payload.appId
                 })
-                setYmlData(payload.services);
+                setServices(payload.services);
             }
         });
         return () => {
@@ -118,7 +133,7 @@ const ChatLayout = () => {
                     sender: 'bot',
                     type: 'radio',
                     text: inputValue.slice(1),
-                    options: ymlData.dynatrace.commands,
+                    options: services.dynatrace.commands,
                 }])
                 return;
             }
@@ -127,7 +142,7 @@ const ChatLayout = () => {
                 setMessages((prevMessages) => [...prevMessages, {
                     sender: 'bot',
                     type: 'text',
-                    text: `Enter the following parameters: ${ymlData.blazemeter.requestInput.join(',')} with comma separated values`
+                    text: `Enter the following parameters: ${services.blazemeter.requestInput.join(',')} with comma separated values`
                 }])
             }
         } else {
@@ -140,13 +155,16 @@ const ChatLayout = () => {
                         queryString: {
                             workspaceId: value[0],
                             projectId: value[1],
+                            appId: value[2] || ymlData.appId.toString(),
+                            userId: ymlData.userId.toString(),
+                            persona: ymlData.persona
                         }
                     }
                 )
             }
 
             if (selectedService === 'dynatrace') {
-                const value = ymlData.dynatrace.commands.find((command: { commandName: string; }) => command.commandName === dynatraceValues.query);
+                const value = services.dynatrace.commands.find((command: { commandName: string; }) => command.commandName === dynatraceValues.query);
                 setDynatraceValues({
                     ...dynatraceValues,
                     appId: inputValue
@@ -173,7 +191,7 @@ const ChatLayout = () => {
 
     const handleRadioChange = (_: React.FormEvent<HTMLDivElement>, data: RadioGroupOnChangeData) => {
         if (selectedService === 'dynatrace') {
-            const value = ymlData.dynatrace.commands.find((command: { commandName: string; }) => command.commandName === data.value);
+            const value = services.dynatrace.commands.find((command: { commandName: string; }) => command.commandName === data.value);
             console.log(value);
             setDynatraceValues({
                 ...dynatraceValues,
@@ -213,15 +231,20 @@ const ChatLayout = () => {
 
     return (
         <div className={classes.root}>
-            {/* Chat messages window */}
-            <Messages messages={messages} handleRadio={handleRadioChange} />
+            {/* Messages container with scrollable content */}
+            <div className={classes.messagesContainer} ref={messagesEndRef}>
+                <Messages messages={messages} handleRadio={handleRadioChange} />
+            </div>
 
             {/* Show suggestions if applicable */}
             {showSuggestions && filteredSuggestions.length > 0 && (
-                <Suggestions suggestions={filteredSuggestions} handleSuggestionClick={handleSuggestionClick} />
+                <Suggestions
+                    suggestions={filteredSuggestions}
+                    handleSuggestionClick={handleSuggestionClick}
+                />
             )}
 
-            {/* Input box and send button */}
+            {/* Fixed input box and send button */}
             <div className={classes.inputWrapper}>
                 <Input
                     name="chatInput"
@@ -230,7 +253,13 @@ const ChatLayout = () => {
                     value={inputValue}
                     onChange={(e) => handleInputChange(e.target.value)}
                 />
-                <Button className={classes.btn} disabled={!inputValue} appearance="primary" icon={<SendRegular />} onClick={handleSendMessage} />
+                <Button
+                    className={classes.btn}
+                    disabled={!inputValue}
+                    appearance="primary"
+                    icon={<SendRegular />}
+                    onClick={handleSendMessage}
+                />
             </div>
         </div>
     );

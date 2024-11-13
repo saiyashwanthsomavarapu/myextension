@@ -11,4 +11,16 @@ export const rootStyles = makeStyles({
     gridRowGap: tokens.spacingVerticalXXS,
     marginTop: tokens.spacingVerticalMNudge,
   },
+  hideArrows: {
+    // Hide the arrow icons in most modern browsers
+    "&::-webkit-outer-spin-button, &::-webkit-inner-spin-button": {
+      display: "none",
+      "-webkit-appearance": "none",
+      margin: 0,
+    },
+    // Hide the arrow icons in Firefox
+    "&[type=number]": {
+      "-moz-appearance": "textfield",
+    },
+  },
 });

@@ -1,5 +1,7 @@
 export interface IColumnDefinition {
   fieldName: string;
+  type: string;
+  linkField?: string;
   name: string;
 }
 export const model = {
@@ -7,21 +9,31 @@ export const model = {
     {
       fieldName: "id",
       name: "Id",
+      type: 'text'
     },
     {
       fieldName: "host_name",
       name: "Host Name",
+      type: 'text'
     },
-    { fieldName: "matric_value", name: "Matric Value" },
+    { fieldName: "matric_value", name: "Matric Value" , type: 'text'},
   ] as IColumnDefinition[],
   blazemeter: [
     {
-      fieldName: "test_id",
-      name: "Test Id",
+      fieldName: "labelName",
+      name: "Label name",
+      linkField: "labelName",
+      type: 'link'
     },
     {
-      fieldName: "test_name",
-      name: "Test Name",
+      fieldName: "maxResponseTime",
+      name: "Maximum time",
+      type: 'text'
+    },
+    {
+      fieldName: "minResponseTime",
+      name: "Minimum time ",
+      type: 'text'
     },
   ] as IColumnDefinition[],
 };

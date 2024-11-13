@@ -66,8 +66,10 @@ function Configuration() {
             <div className={rootStyle.base}>
                 <div className={rootStyle.field} >
                     <Input
+                        className={rootStyle.hideArrows}
                         placeholder={"User ID"}
                         name={"UserId"}
+                        type="number"
                         value={config.userId}
                         onChange={(event) =>
                             setConfig({
@@ -81,8 +83,10 @@ function Configuration() {
             <div className={rootStyle.base}>
                 <div className={rootStyle.field} >
                     <Input
+                        className={rootStyle.hideArrows}
                         placeholder={"App ID"}
                         name={"AppId"}
+                        type="number"
                         value={config.appId}
                         onChange={(event) =>
                             setConfig({
