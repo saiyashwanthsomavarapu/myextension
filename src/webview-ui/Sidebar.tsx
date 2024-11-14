@@ -225,7 +225,6 @@ function Sidebar() {
                                         className={rootStyle.hideArrows}
                                         placeholder={"App ID"}
                                         name={"AppId"}
-                                        type="number"
                                         value={dynatraceValues.appId}
                                         onChange={(event) =>
                                             setDynatraceValues({
@@ -249,7 +248,6 @@ function Sidebar() {
                                 placeholder={input}
                                 name={input}
                                 className={rootStyle.hideArrows}
-                                type="number"
                                 value={blazemeterValue[input as keyof typeof blazemeterValue]}
                                 onChange={(event) =>
                                     setBlazemeterValue({

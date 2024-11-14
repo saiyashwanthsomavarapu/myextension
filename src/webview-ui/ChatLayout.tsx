@@ -3,7 +3,7 @@ import Messages from './components/Messages';
 import { Button, Input, RadioGroupOnChangeData } from '@fluentui/react-components';
 import { SendRegular } from '@fluentui/react-icons';
 import { List, ListItem } from '@fluentui/react-list-preview';
-import { apiRequest } from './utils';
+import { apiRequest, getApiData } from './utils';
 import { useStyles } from './styles/chatLayout.styles';
 import './main.css';
 import { Initialize } from './initialize';
@@ -35,7 +35,7 @@ const ChatLayout = () => {
     const [inputValue, setInputValue] = useState('');
     const [messages, setMessages] = useState<IMessage[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const [suggestions, setSuggestions] = useState(['dynatrace', 'blazemeter']);
+    const [suggestions, setSuggestions] = useState(['dynatrace', 'blazemeter', 'serviceMap']);
     const [selectedService, setSelectedService] = useState<string>('');
     const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -72,7 +72,7 @@ const ChatLayout = () => {
                     sender: 'bot',
                     type: 'table',
                     text: payload.serviceName,
-                    options: payload.serviceName === 'dynatrace' ? payload.metrics.data : payload.metrics['AggregateReport']
+                    options: getApiData(payload)
                 }]);
             }
             if (command === "services") {
@@ -128,12 +128,12 @@ const ChatLayout = () => {
         setShowSuggestions(false);
         if (suggestions.includes(currentValue)) {
             setSelectedService(currentValue);
-            if (newUserMessage.text === '@dynatrace') {
+            if (['dynatrace','serviceMap'].includes(currentValue)) {
                 setMessages((prevMessages) => [...prevMessages, {
                     sender: 'bot',
                     type: 'radio',
-                    text: inputValue.slice(1),
-                    options: services.dynatrace.commands,
+                    text: currentValue,
+                    options: services[currentValue].commands,
                 }])
                 return;
             }
@@ -163,6 +163,16 @@ const ChatLayout = () => {
                 )
             }
 
+            if (selectedService === 'serviceMap') {
+                apiRequest({
+                    serviceName: selectedService,
+                    apiQuery: apiEndpoints[selectedService],
+                    queryString: {
+                        prompt: dynatraceValues.query
+                    },
+                });
+            }
+
             if (selectedService === 'dynatrace') {
                 const value = services.dynatrace.commands.find((command: { commandName: string; }) => command.commandName === dynatraceValues.query);
                 setDynatraceValues({
@@ -177,6 +187,10 @@ const ChatLayout = () => {
                         dimensionName: value.dimensionName
                     }
                 });
+                setDynatraceValues({
+                    query: '',
+                    appId: ''
+                })
             }
         }
     };
@@ -225,6 +239,16 @@ const ChatLayout = () => {
                 ]);
             }
 
+        }
+
+        if (selectedService === 'serviceMap') {
+            apiRequest({
+                serviceName: selectedService,
+                apiQuery: apiEndpoints[selectedService],
+                queryString: {
+                    prompt: data.value
+                },
+            });
         }
     };
 

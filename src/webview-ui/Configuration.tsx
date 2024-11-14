@@ -69,7 +69,6 @@ function Configuration() {
                         className={rootStyle.hideArrows}
                         placeholder={"User ID"}
                         name={"UserId"}
-                        type="number"
                         value={config.userId}
                         onChange={(event) =>
                             setConfig({
