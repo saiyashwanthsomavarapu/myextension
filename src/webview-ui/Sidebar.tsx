@@ -11,7 +11,7 @@ import { model } from "./models/model";
 import { rootStyles } from "./assets/root.styles";
 import { ErrorComponent, IError } from "./components/ErrorComponent";
 import { Initialize } from "./initialize";
-import { apiRequest } from "./utils";
+import { apiRequest, getApiData } from "./utils";
 import TableComponent from "./components/TableComponent";
 
 const styles = makeStyles({
@@ -71,12 +71,8 @@ function Sidebar() {
             console.log("transformation:", event.data);
             const { command, payload } = event.data;
             if (command === "sendData") {
-                if (payload.serviceName === 'dynatrace') {
-                    setMetricsData(payload.metrics.data);
-                } 
-                if(payload.serviceName === 'blazemeter') {
-                    setMetricsData(payload.metrics['AggregateReport']);
-                }
+                console.log("payload", payload);
+                setMetricsData(getApiData(payload));
                 setError({
                     message: "",
                     intent: "info",
@@ -143,10 +139,22 @@ function Sidebar() {
                 queryString: {
                     ...blazemeterValue,
                     persona,
-                    userId: ymlData.userId.toString()
+                    userid: ymlData.userId.toString(),
+                    appid: blazemeterValue.appId.toString()
                 },
             });
             setBlazemeterValue({ projectId: "", workspaceId: "", appId: "" });
+        }
+
+        if (selectService === "serviceMap") {
+            apiRequest({
+                serviceName: selectService,
+                apiQuery: apiEndpoints[selectService],
+                queryString: {
+                    prompt: dynatraceValues.query
+                },
+            });
+            setDynatraceValues({ query: "", appId: "" });
         }
     };
 
@@ -179,13 +187,12 @@ function Sidebar() {
     const isSubmitDisabled =
         selectService === "blazemeter"
             ? !isBlazemeterValid
-            : selectService === "dynatrace"
+            : ["dynatrace", "serviceMap"].includes(selectService)
                 ? !isDynatraceValid
                 : true;
 
     return (
         <div className={style.root}>
-            {JSON.stringify(blazemeterValue)}
             <SelectBox
                 label="Select service"
                 options={Object.keys(services).map((key) => ({
@@ -194,7 +201,7 @@ function Sidebar() {
                 }))}
                 onChange={handelSelectService}
             />
-            {selectService === "dynatrace" && (
+            {["dynatrace", 'serviceMap'].includes(selectService) && (
                 <>
                     <SelectBox
                         label="Select command"

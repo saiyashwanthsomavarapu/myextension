@@ -36,4 +36,11 @@ export const model = {
       type: 'text'
     },
   ] as IColumnDefinition[],
+  serviceMap: [
+    {
+      fieldName: "sessionId",
+      name: "Session Id",
+      type: 'text'
+    }
+  ] as IColumnDefinition[]
 };
