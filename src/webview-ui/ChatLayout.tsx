@@ -155,8 +155,8 @@ const ChatLayout = () => {
                         queryString: {
                             workspaceId: value[0],
                             projectId: value[1],
-                            appId: value[2] || ymlData.appId.toString(),
-                            userId: ymlData.userId.toString(),
+                            appid: value[2] || ymlData.appId.toString(),
+                            userid: ymlData.userId.toString(),
                             persona: ymlData.persona
                         }
                     }
