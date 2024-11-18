@@ -20,10 +20,6 @@ export async function readYAMLFile(webview: Webview) {
     // Now 'data' contains the parsed YAML content
     window.showInformationMessage("YAML file read successfully.");
 
-    // Process the extracted data as needed
-    // For demonstration, let's log the data to the console
-    console.log(data);
-
     // If you want to display specific data from the YAML
     if (typeof data === "object") {
       setTimeout(() => {

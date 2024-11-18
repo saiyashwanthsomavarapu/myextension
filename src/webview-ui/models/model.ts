@@ -38,8 +38,8 @@ export const model = {
   ] as IColumnDefinition[],
   serviceMap: [
     {
-      fieldName: "sessionId",
-      name: "Session Id",
+      fieldName: "answer",
+      name: "Answer",
       type: 'text'
     }
   ] as IColumnDefinition[]

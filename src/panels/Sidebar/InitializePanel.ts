@@ -8,14 +8,12 @@ import {
   workspace,
   ConfigurationTarget,
 } from "vscode";
-import { selectYAMLFilePath } from "../../fileOperations";
 import { getUri, getNonce } from "../../utils"; // Helper functions for nonce and URIs
 import * as path from 'path';
 import { readYAMLFile } from "../../fileOperations";
 
 
 const ymlFilePath = path.join(__dirname, 'config.yaml');
-// import * as yaml from "../../config.yaml";
 
 export class InitializePanel implements WebviewViewProvider {
   private _view?: WebviewView;
@@ -105,7 +103,6 @@ export class InitializePanel implements WebviewViewProvider {
         await config.update("persona", payload.persona, ConfigurationTarget.Global);
         await config.update("appId", payload.appId, ConfigurationTarget.Global);
         window.showInformationMessage(`User Id and App Id  successfully updated.`);
-        // commands.executeCommand("nudge.selectYAMLFile", selectYAMLFilePath);
       }
     });
   }

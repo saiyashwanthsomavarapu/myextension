@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {
-    makeStyles,
     Button,
     Input,
     Spinner,
+    Label,
 } from "@fluentui/react-components";
 import "./main.css";
 import { SelectBox } from "./components/SelectBox";
@@ -11,32 +11,16 @@ import { model } from "./models/model";
 import { rootStyles } from "./assets/root.styles";
 import { ErrorComponent, IError } from "./components/ErrorComponent";
 import { Initialize } from "./initialize";
-import { apiRequest, getApiData } from "./utils";
+import { apiRequest, clearState, getApiData, setState } from "./helperFunctions";
 import TableComponent from "./components/TableComponent";
+import { useStyles } from "./styles/sidebar.styles";
 
-const styles = makeStyles({
-    root: {
-        backgroundColor: "var(--vscode-activityBar-background)",
-        // color: "var(--vscode-editor-foreground)",
-    },
-    btn: {
-        width: "100%",
-        marginTop: "20px",
-    },
-    table: {
-        marginTop: "20px",
-    },
-    spinner: {
-        margin: "20px auto", // Center the spinner
-    },
-});
 
 function Sidebar() {
     const [metricsData, setMetricsData] = useState<any>([]);
-    const [persona, setPersona] = useState<string>("");
     const [ymlData, setYmlData] = useState<any>({});
     const [services, setServices] = useState<any>([]);
-    const [dynatraceValues, setDynatraceValues] = useState<{
+    const [payloadRequest, setPayloadRequest] = useState<{
         query: string;
         appId: string;
     }>({
@@ -48,38 +32,38 @@ function Sidebar() {
         intent: "info",
     });
     const [selectService, setSelectServices] = useState<string>("");
-    const [blazemeterValue, setBlazemeterValue] = useState<{
-        projectId: string;
-        workspaceId: string;
-        appId: string;
-    }>({ projectId: "", workspaceId: "", appId: "" });
-    const [apiEndpoints, setApiEndpoints] = useState<{ [key: string]: string }>(
-        {}
-    );
     const [loading, setLoading] = useState<boolean>(false);
 
-    const style = styles();
+    const style = useStyles();
     const rootStyle = rootStyles();
 
     useEffect(() => {
         const savedState = window.vscode.getState();
-        console.log("useState", savedState);
-        if (savedState) {
-            initialize(savedState);
+        if (savedState?.ymlData) {
+            initialize(savedState?.ymlData);
+            setMetricsData(savedState?.nudge?.metrics ?? []);
+            setSelectServices(savedState?.nudge?.selectedService ?? '');
+        } else {
+            clearState()
         }
-        window.addEventListener("message", (event) => {
-            console.log("transformation:", event.data);
-            const { command, payload } = event.data;
+        window.addEventListener("message", ({ data }) => {
+            const { command, payload } = data;
+            if (command === 'config' && !payload.saveData) {
+                setState({ saveData: payload.saveData, nudge: { metricsData: [], selectedService: '' } })
+                setMetricsData([]);
+                setSelectServices('');
+            }
             if (command === "sendData") {
-                console.log("payload", payload);
-                setMetricsData(getApiData(payload));
+                const response = getApiData(payload);
+                setState({ nudge: { metrics: response, selectedService: payload.serviceName } });
+                setMetricsData(response);
                 setError({
-                    message: "",
+                    message: response.length > 0 ? "" : "Data not found",
                     intent: "info",
                 });
             }
             if (command === "services") {
-                window.vscode.setState(payload);
+                setState({ saveData: true, ymlData: payload });
                 initialize(payload);
             }
             if (command === "error") {
@@ -91,22 +75,19 @@ function Sidebar() {
             }
             setLoading(false);
         });
+        return () => {
+            window.removeEventListener('message', () => { });
+        };
     }, []);
 
-    const initialize = (payload: any) => {
-        console.log("payload", payload);
-        setYmlData(payload);
-        setApiEndpoints(payload.apiEndpoints);
-        setPersona(payload.userPersona);
-        setDynatraceValues({
-            ...dynatraceValues,
-            appId: payload.appId.toString(),
+    const initialize = (fileContent: any) => {
+        setYmlData(fileContent);
+        setPayloadRequest({
+            ...payloadRequest,
+            appId: fileContent.appId.toString(),
         });
-        setBlazemeterValue({
-            ...blazemeterValue,
-            appId: payload.appId.toString(),
-        });
-        setServices(payload.services)
+        setServices(fileContent.services)
+
     }
 
     const handleSubmit = () => {
@@ -114,59 +95,47 @@ function Sidebar() {
         if (selectService === "dynatrace") {
             const value = services.dynatrace.commands.find(
                 (command: { queryString: string }) =>
-                    command.queryString === dynatraceValues.query
+                    command.queryString === payloadRequest.query
             );
-            apiRequest({
-                serviceName: selectService,
-                apiQuery: apiEndpoints[selectService],
-                queryString: {
-                    metricsSelector: dynatraceValues.query.replace(
-                        "$$$",
-                        dynatraceValues.appId
-                    ),
-                    dimensionName: value.dimensionName,
-                },
+            apiRequest(selectService, {
+                metricsSelector: payloadRequest.query.replace(
+                    "$$$",
+                    payloadRequest.appId
+                ),
+                dimensionName: value.dimensionName,
             });
-            setDynatraceValues({
+            setPayloadRequest({
                 query: "",
                 appId: "",
             });
         }
         if (selectService === "blazemeter") {
-            apiRequest({
-                serviceName: selectService,
-                apiQuery: apiEndpoints[selectService],
-                queryString: {
-                    ...blazemeterValue,
-                    persona,
-                    userid: ymlData.userId.toString(),
-                    appid: blazemeterValue.appId.toString()
-                },
+            apiRequest(selectService, {
+                persona: ymlData.persona,
+                userid: ymlData.userId.toString(),
+                workspaceId: "1234", // This property is not required and need to be removed in future development
+                projectId: "1234", // This property is not required and need to be removed in future development
+                appid: payloadRequest.appId.toString()
             });
-            setBlazemeterValue({ projectId: "", workspaceId: "", appId: "" });
+            setPayloadRequest({ query: "", appId: "" });
         }
 
         if (selectService === "serviceMap") {
-            apiRequest({
-                serviceName: selectService,
-                apiQuery: apiEndpoints[selectService],
-                queryString: {
-                    prompt: dynatraceValues.query
-                },
+            apiRequest(selectService, {
+                prompt: payloadRequest.query
             });
-            setDynatraceValues({ query: "", appId: "" });
+            setPayloadRequest({ query: "", appId: "" });
         }
     };
 
     function validateInput() {
         // Validate query
-        if (!dynatraceValues.query) {
+        if (!payloadRequest.query) {
             return false;
         }
-
         // Validate appId only if $$$ is present in query
-        if (dynatraceValues.query.includes("$$$")) {
-            if (!dynatraceValues.appId) {
+        if (payloadRequest.query.includes("$$$")) {
+            if (!payloadRequest.appId) {
                 return false;
             }
         }
@@ -175,13 +144,16 @@ function Sidebar() {
     }
 
     const handelSelectService = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setState({ nudge: { metrics: metricsData, selectedService: event.target.value } })
         setSelectServices(event.target.value);
+        setPayloadRequest({
+            ...payloadRequest,
+            query: ''
+        });
         setMetricsData([]);
     };
 
-    const isBlazemeterValid = Object.values(blazemeterValue).every(
-        (value) => value.trim() !== ""
-    );
+    const isBlazemeterValid = payloadRequest.appId !== "";
     const isDynatraceValid = validateInput();
 
     const isSubmitDisabled =
@@ -195,6 +167,7 @@ function Sidebar() {
         <div className={style.root}>
             <SelectBox
                 label="Select service"
+                value={selectService}
                 options={Object.keys(services).map((key) => ({
                     label: key,
                     value: key,
@@ -209,26 +182,30 @@ function Sidebar() {
                             label: command.commandName,
                             value: command.queryString,
                         }))}
+                        value={payloadRequest.query}
                         onChange={(event) =>
-                            setDynatraceValues((prev) => ({
+                            setPayloadRequest((prev) => ({
                                 ...prev,
                                 query: event.target.value,
                             }))
                         }
                     />
                     {services[selectService].commands.map((command: any) =>
-                        command.queryString === dynatraceValues.query &&
+                        command.queryString === payloadRequest.query &&
                             command.queryString.includes("$$$") ? (
                             <div className={rootStyle.base}>
                                 <div className={rootStyle.field}>
+                                    <Label htmlFor={"AppId"}>
+                                        App ID
+                                    </Label>
                                     <Input
                                         className={rootStyle.hideArrows}
                                         placeholder={"App ID"}
                                         name={"AppId"}
-                                        value={dynatraceValues.appId}
+                                        value={payloadRequest.appId}
                                         onChange={(event) =>
-                                            setDynatraceValues({
-                                                ...dynatraceValues,
+                                            setPayloadRequest({
+                                                ...payloadRequest,
                                                 appId: event.target.value,
                                             })
                                         }
@@ -243,15 +220,18 @@ function Sidebar() {
                 services[selectService].requestInput.map((input: string) => (
                     <div className={rootStyle.base}>
                         <div className={rootStyle.field} key={input}>
+                            <Label htmlFor={input}>
+                                App ID
+                            </Label>
                             <Input
                                 key={input}
                                 placeholder={input}
                                 name={input}
                                 className={rootStyle.hideArrows}
-                                value={blazemeterValue[input as keyof typeof blazemeterValue]}
+                                value={payloadRequest[input as keyof typeof payloadRequest]}
                                 onChange={(event) =>
-                                    setBlazemeterValue({
-                                        ...blazemeterValue,
+                                    setPayloadRequest({
+                                        ...payloadRequest,
                                         [input]: event.target.value,
                                     })
                                 }
@@ -269,7 +249,7 @@ function Sidebar() {
             </Button>
             {loading && <Spinner className={style.spinner} size="large" />}
             {metricsData.length > 0 && (
-               <TableComponent body={metricsData} headers={model[selectService as keyof typeof model]} />
+                <TableComponent body={metricsData} headers={model[selectService as keyof typeof model]} />
             )}
             {error.message !== "" && (
                 <ErrorComponent message={error.message} intent={error.intent} />

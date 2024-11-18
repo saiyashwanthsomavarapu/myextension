@@ -1,23 +1,22 @@
 import {
-  commands,
   WebviewViewProvider,
   WebviewView,
   Uri,
   window,
-  ExtensionContext,
   Webview,
+  workspace
 } from "vscode";
 import axios from "axios";
 import { readYAMLFile } from "../../fileOperations";
-import { getUri, getNonce, storeGlobalState } from "../../utils"; // Helper functions for nonce and URIs
+import { getUri, getNonce } from "../../utils"; // Helper functions for nonce and URIs
+import { set } from "yaml/dist/schema/yaml-1.1/set";
 
 export class SidebarPanel1 implements WebviewViewProvider {
   private _view?: WebviewView;
   public ymlData: any;
 
   constructor(
-    private readonly _extensionUri: Uri,
-    private readonly _context: ExtensionContext
+    private readonly _extensionUri: Uri
   ) {}
 
   public async resolveWebviewView(webviewView: WebviewView) {
@@ -46,6 +45,17 @@ export class SidebarPanel1 implements WebviewViewProvider {
         "Sidebar refreshed after YAML path update."
       );
     }
+  }
+
+  public async updateConfig() {
+    setTimeout(() => {
+      this._view?.webview.postMessage({
+        command: "config",
+        payload: {
+          saveData: workspace.getConfiguration("config").get("saveData"),
+        },
+      });
+    }, 1000);
   }
 
   private _getWebviewContent(webview: any): string {
@@ -86,16 +96,10 @@ export class SidebarPanel1 implements WebviewViewProvider {
         this._fetchApiData(message.payload); // Handle API request from React
       }
     });
-
-  }
-
-  private async _broadcastMessage(data: any) {
-    await commands.executeCommand("nudge.broadcastMessage", data);
   }
 
   // Axios call to fetch data
   private async _fetchApiData(apiCall: any) {
-    console.log(apiCall);
     try {
       const config = {
         method: "post",
@@ -118,16 +122,6 @@ export class SidebarPanel1 implements WebviewViewProvider {
           payload: responsePayload,
         });
       }, 1000);
-      console.log("API Response:", response.data);
-      
-      storeGlobalState(this._context, "update", responsePayload);
-      // Broadcast the data to other views
-      await this._broadcastMessage({
-        command: "updated",
-        key: "update",
-        value: responsePayload,
-      });
-      // this.resultPanel.refreshData();
     } catch (error) {
       this._view?.webview.postMessage({
         command: "error",

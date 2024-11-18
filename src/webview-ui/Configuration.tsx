@@ -1,30 +1,19 @@
-import { Button, Input, makeStyles, Text } from '@fluentui/react-components';
-import { Settings24Regular as SettingsIcon } from '@fluentui/react-icons';
+import { Button, Input, Text } from '@fluentui/react-components';
 import { Initialize } from './initialize';
 import { useEffect, useState } from 'react';
 import { rootStyles } from './assets/root.styles';
 import { SelectBox } from './components/SelectBox';
 import { ErrorComponent } from "./components/ErrorComponent";
-
-const styles = makeStyles({
-    root: {
-        backgroundColor: "var(--vscode-activityBar-background)",
-        // display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-    },
-    btn: {
-        marginTop: '10px'
-    },
-    infoContainer: {
-        marginTop: '10px'
-    }
-});
+import { useStyles } from './styles/configuration.styles';
 
 const options = [
     {
         label: 'observability',
         value: 'observability'
+    },
+    {
+        label: 'quality',
+        value: 'quality'
     },
     {
         label: 'performance',
@@ -38,7 +27,7 @@ function Configuration() {
         userId: '',
         appId: '',
     })
-    const style = styles();
+    const style = useStyles();
     const rootStyle = rootStyles();
 
     useEffect(() => {

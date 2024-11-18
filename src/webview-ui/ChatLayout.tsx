@@ -2,11 +2,11 @@ import React, { useEffect, useState, useRef } from 'react';
 import Messages from './components/Messages';
 import { Button, Input, RadioGroupOnChangeData } from '@fluentui/react-components';
 import { SendRegular } from '@fluentui/react-icons';
-import { List, ListItem } from '@fluentui/react-list-preview';
-import { apiRequest, getApiData } from './utils';
+import { apiRequest, clearState, getApiData, setState } from './helperFunctions';
 import { useStyles } from './styles/chatLayout.styles';
 import './main.css';
 import { Initialize } from './initialize';
+import { Suggestions } from './components/SuggestionComponent';
 
 
 
@@ -19,7 +19,6 @@ interface IMessage {
 
 const ChatLayout = () => {
     const classes = useStyles();
-    // const [metricsData, setMetricsData] = useState<any>([]);
     const [ymlData, setYmlData] = useState<any>({});
     const [services, setServices] = useState<any>([]);
     const [dynatraceValues, setDynatraceValues] = useState<{
@@ -29,9 +28,6 @@ const ChatLayout = () => {
         query: "",
         appId: ""
     })
-    const [apiEndpoints, setApiEndpoints] = useState<{ [key: string]: string }>(
-        {}
-    );
     const [inputValue, setInputValue] = useState('');
     const [messages, setMessages] = useState<IMessage[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -42,6 +38,9 @@ const ChatLayout = () => {
 
     // Scroll to the bottom (newest message) whenever messages change
     useEffect(() => {
+        if (messages.length > 0) {
+            setState({messages: messages});
+        }
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
         }
@@ -50,50 +49,84 @@ const ChatLayout = () => {
 
     useEffect(() => {
         const savedState = window.vscode.getState();
-        console.log('useState', savedState)
-        if (savedState) {
-            setYmlData(savedState);
-            setServices(savedState.services);
-            setSuggestions(Object.keys(savedState.services))
-            setDynatraceValues({
-                ...dynatraceValues,
-                appId: savedState.appId
-            })
-            setApiEndpoints(savedState.apiEndpoints);
-        }
-
-        window.addEventListener("message", (event) => {
-            console.log("chat:", event.data);
-            const { command, payload } = event.data;
-            if (command === "sendData") {
-                // setMetricsData(payload.metrics);
-
-                setMessages((prevMessages) => [...prevMessages, {
-                    sender: 'bot',
-                    type: 'table',
-                    text: payload.serviceName,
-                    options: getApiData(payload)
-                }]);
-            }
-            if (command === "services") {
-                window.vscode.setState(payload);
-                setYmlData(payload);
-                setSuggestions(Object.keys(payload.services))
-                setApiEndpoints(payload.apiEndpoints);
-                setDynatraceValues({
-                    ...dynatraceValues,
-                    appId: payload.appId
-                })
-                setServices(payload.services);
-            }
-        });
+        initializeData(savedState);
+        window.addEventListener("message", handleMessageEvent);
+        
         return () => {
             window.removeEventListener('message', () => { });
         };
     }, []);
 
+    const initializeData = (savedState: any) => {
+        if (savedState) {
+            const { ymlData: savedYmlData, messages: savedMessages = [] } = savedState;
+            setYmlData(savedYmlData);
+            setServices(savedYmlData?.services ?? []);
+            setMessages(savedMessages);
+            setSuggestions(Object.keys(savedYmlData?.services ?? {}));
+            setDynatraceValues((prev) => ({
+                ...prev,
+                appId: savedYmlData?.appId ?? '',
+            }));
+        } else {
+            clearState();
+        }
+    };
+
+    const handleMessageEvent = (event:MessageEvent) => {
+        const { command, payload } = event.data;
+        if (command === 'config' && !payload.saveData) {
+            setState({saveData: payload.saveData, messages: []});
+            setMessages([]);
+        }
+        if (command === "sendData") {
+            addBotMessage('table',payload.serviceName,getApiData(payload));
+        }
+        if (command === "services") {
+            setState({ymlData: payload});
+            setYmlData(payload);
+            setSuggestions(Object.keys(payload.services));
+            setDynatraceValues({
+                ...dynatraceValues,
+                appId: payload.appId
+            });
+            setServices(payload.services);
+        }
+    }
+
+    const addBotMessage = (type: string, text: string, options: any[] = []) => {
+        setMessages((prevMessages) => [
+            ...prevMessages,
+           {
+                sender: 'bot',
+                type,
+                text,
+                ...(options?.length > 0 ? {options} : {} )
+            },
+        ]);
+      };
+      
+      const addUserMessage = (text: string) => {
+        setMessages((prevMessages) => [
+            ...prevMessages,
+            {
+                sender: 'user',
+                type: 'text',
+                text: text.trim(),
+            },
+        ]);
+      };
+
+    const apiRequestWithErrorHandling = async (service: string, payload: any) => {
+        try {
+            await apiRequest(service, payload);
+        } catch (error) {
+            console.error(`API request failed for ${service}:`, error);
+            addBotMessage('An error occurred while processing your request.', 'text');
+        }
+    };
+
     const handleInputChange = (targetValue: string) => {
-        console.log(targetValue)
         const value = targetValue;
         setInputValue(value);
 
@@ -118,58 +151,35 @@ const ChatLayout = () => {
 
     const handleSendMessage = () => {
         const currentValue = inputValue.slice(1);
-        const newUserMessage: IMessage = {
-            sender: 'user',
-            type: 'text',
-            text: inputValue.trim(),
-        };
-        setMessages((prevMessages) => [...prevMessages, newUserMessage]);
+        addUserMessage(inputValue.trim());
         setInputValue('');
         setShowSuggestions(false);
         if (suggestions.includes(currentValue)) {
             setSelectedService(currentValue);
-            if (['dynatrace','serviceMap'].includes(currentValue)) {
-                setMessages((prevMessages) => [...prevMessages, {
-                    sender: 'bot',
-                    type: 'radio',
-                    text: currentValue,
-                    options: services[currentValue].commands,
-                }])
+            if (['dynatrace', 'serviceMap'].includes(currentValue)) {
+                addBotMessage('radio',currentValue,services[currentValue].commands)
                 return;
             }
 
-            if (newUserMessage.text === '@blazemeter') {
-                setMessages((prevMessages) => [...prevMessages, {
-                    sender: 'bot',
-                    type: 'text',
-                    text: `Enter the following parameters: ${services.blazemeter.requestInput.join(',')} with comma separated values`
-                }])
+            if (currentValue === 'blazemeter') {
+                addBotMessage('text','Enter the App Id:')
             }
         } else {
             if (selectedService === 'blazemeter') {
-                const value = inputValue.split(',').map(item => item.trim());
-                apiRequest(
+                apiRequestWithErrorHandling(selectedService,
                     {
-                        apiQuery: apiEndpoints[selectedService],
-                        serviceName: selectedService,
-                        queryString: {
-                            workspaceId: value[0],
-                            projectId: value[1],
-                            appid: value[2] || ymlData.appId.toString(),
-                            userid: ymlData.userId.toString(),
-                            persona: ymlData.persona
-                        }
+                        workspaceId: '1234', // This property is not required and need to be removed in future development
+                        projectId: '1234', // This property is not required and need to be removed in future development
+                        appid: inputValue || ymlData.appId.toString(),
+                        userid: ymlData.userId.toString(),
+                        persona: ymlData.persona
                     }
-                )
+                );
             }
 
             if (selectedService === 'serviceMap') {
-                apiRequest({
-                    serviceName: selectedService,
-                    apiQuery: apiEndpoints[selectedService],
-                    queryString: {
-                        prompt: dynatraceValues.query
-                    },
+                apiRequestWithErrorHandling(selectedService, {
+                    prompt: dynatraceValues.query
                 });
             }
 
@@ -179,13 +189,9 @@ const ChatLayout = () => {
                     ...dynatraceValues,
                     appId: inputValue
                 })
-                apiRequest({
-                    apiQuery: apiEndpoints[selectedService],
-                    serviceName: selectedService,
-                    queryString: {
-                        metricsSelector: value.queryString.replace('$$$', inputValue),
-                        dimensionName: value.dimensionName
-                    }
+                apiRequestWithErrorHandling(selectedService, {
+                    metricsSelector: value.queryString.replace('$$$', inputValue),
+                    dimensionName: value.dimensionNam
                 });
                 setDynatraceValues({
                     query: '',
@@ -206,25 +212,17 @@ const ChatLayout = () => {
     const handleRadioChange = (_: React.FormEvent<HTMLDivElement>, data: RadioGroupOnChangeData) => {
         if (selectedService === 'dynatrace') {
             const value = services.dynatrace.commands.find((command: { commandName: string; }) => command.commandName === data.value);
-            console.log(value);
             setDynatraceValues({
                 ...dynatraceValues,
                 query: value.commandName ?? ''
             })
             if (!value.queryString.includes('$$$')) {
-                setMessages((prevMessages) => [...prevMessages, {
-                    sender: 'user',
-                    type: 'text',
-                    text: data?.value ?? ''
-                }]);
-                apiRequest({
-                    apiQuery: apiEndpoints[selectedService],
-                    serviceName: selectedService,
-                    queryString: {
-                        metricsSelector: value.queryString.replace('$$$', inputValue),
-                        dimensionName: value.dimensionName
-                    }
+                addUserMessage(data?.value ?? '');
+                apiRequestWithErrorHandling(selectedService, {
+                    metricsSelector: value.queryString.replace('$$$', inputValue),
+                    dimensionName: value.dimensionName
                 });
+                return;
             } else {
                 setMessages((prevMessages) => [...prevMessages, {
                     sender: 'user',
@@ -238,16 +236,11 @@ const ChatLayout = () => {
                 }
                 ]);
             }
-
         }
 
         if (selectedService === 'serviceMap') {
-            apiRequest({
-                serviceName: selectedService,
-                apiQuery: apiEndpoints[selectedService],
-                queryString: {
-                    prompt: data.value
-                },
+            apiRequestWithErrorHandling(selectedService, {
+                prompt: data.value
             });
         }
     };
@@ -289,29 +282,6 @@ const ChatLayout = () => {
     );
 };
 
-interface ISuggestionProps {
-    suggestions: string[];
-    handleSuggestionClick: (suggestion: string) => void;
-}
 
-const Suggestions = (props: ISuggestionProps) => {
-    const { suggestions, handleSuggestionClick } = props;
-    const classes = useStyles();
-    return (
-        <div className={classes.suggestions}>
-            <List>
-                {suggestions.map((suggestion) => (
-                    <ListItem
-                        key={suggestion}
-                        className={classes.suggestionItem}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                    >
-                        {suggestion}
-                    </ListItem>
-                ))}
-            </List>
-        </div>
-    );
-}
 
 Initialize(ChatLayout);

@@ -1,15 +1,14 @@
 import {
-  commands,
   WebviewViewProvider,
   WebviewView,
   Uri,
   window,
   Webview,
-  ExtensionContext,
+  workspace,
 } from "vscode";
 import axios from "axios";
 import { readYAMLFile } from "../../fileOperations";
-import { getUri, getNonce, storeGlobalState } from "../../utils"; // Helper functions for nonce and URIs
+import { getUri, getNonce } from "../../utils"; // Helper functions for nonce and URIs
 
 interface IApiParams {
   apiQuery: string;
@@ -24,8 +23,7 @@ export class SidebarPanel2 implements WebviewViewProvider {
   public ymlData: any;
 
   constructor(
-    private readonly _extensionUri: Uri,
-    private readonly _context: ExtensionContext
+    private readonly _extensionUri: Uri
   ) {}
 
   public async resolveWebviewView(webviewView: WebviewView) {
@@ -45,9 +43,6 @@ export class SidebarPanel2 implements WebviewViewProvider {
 
     // Fetch API data
     this.ymlData = await this._loadYAMLData();
-
-    // Automatically call the API when the sidebar is loaded
-    // this._fetchApiData("max");
   }
 
   private async _loadYAMLData() {
@@ -68,6 +63,18 @@ export class SidebarPanel2 implements WebviewViewProvider {
       );
     }
   }
+
+  public async updateConfig() {
+    setTimeout(() => {
+      this._view?.webview.postMessage({
+        command: "config",
+        payload: {
+          saveData: workspace.getConfiguration("config").get("saveData"),
+        },
+      });
+    }, 1000);
+  }
+
 
   private _getWebviewContent(webview: any): string {
     const scriptUri = getUri(webview, this._extensionUri, [
@@ -99,9 +106,9 @@ export class SidebarPanel2 implements WebviewViewProvider {
     `;
   }
 
-  private async _broadcastMessage(data: any) {
-    await commands.executeCommand("nudge.broadcastMessage", data);
-  }
+  // private async _broadcastMessage(data: any) {
+  //   await commands.executeCommand("nudge.broadcastMessage", data);
+  // }
 
   // Listen for messages from the React component in the sidebar
   private _setMessageListener(webview: any) {
@@ -126,7 +133,6 @@ export class SidebarPanel2 implements WebviewViewProvider {
         data: apiCall.queryString,
       };
       const response = await axios.request(config);
-      console.log(apiCall);
       const responsePayload = {
         metrics: response.data,
         serviceName: apiCall.serviceName,
@@ -138,14 +144,6 @@ export class SidebarPanel2 implements WebviewViewProvider {
           payload: responsePayload
         });
       }, 1000);
-      console.log("API Response:", response.data);
-      storeGlobalState(this._context, "update", responsePayload);
-      // Broadcast the data to other views
-      await this._broadcastMessage({
-        command: "updated",
-        key: "update",
-        value: responsePayload,
-      });
     } catch (error) {
       this._view?.webview.postMessage({
         command: "error",

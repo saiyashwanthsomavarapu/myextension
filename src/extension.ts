@@ -14,9 +14,9 @@ let disposables: Disposable[] = [];
 export function activate(context: ExtensionContext) {
   // Sidebar view
   const initializePanel = new InitializePanel(context.extensionUri); // InitializePanel
-  const sidebarPanel1 = new SidebarPanel1(context.extensionUri, context);
-  const sidebarPanel2 = new SidebarPanel2(context.extensionUri, context);
-  // const resultPanel = new ResultPanel(context.extensionUri, context);
+  const sidebarPanel1 = new SidebarPanel1(context.extensionUri);
+  const sidebarPanel2 = new SidebarPanel2(context.extensionUri);
+
   // Refresh the sidebar when the YAML file path is modified
   showSidebarWebview();
 
@@ -29,39 +29,29 @@ export function activate(context: ExtensionContext) {
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider("chat-layout", sidebarPanel2)
   );
-  // context.subscriptions.push(
-  //   vscode.window.registerWebviewViewProvider("result", resultPanel)
-  // );
 
   // Select yml file path
   context.subscriptions.push(
     vscode.commands.registerCommand("nudge.selectYAMLFile", selectYAMLFilePath)
   );
-
+  
   context.subscriptions.push(
-    vscode.commands.registerCommand(
-      "nudge.updateGlobalState",
-      (key: string, value: any) => {
-        storeGlobalState(context, key, value);
-      }
-    )
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand("nudge.getGlobalState", (key: string) => {
-      return getGlobalState(context, key);
+    vscode.commands.registerCommand("nudge.deleteSidebarData", () => {
+      sidebarPanel1.updateConfig();
     })
   );
 
-  // Broadcast message
   context.subscriptions.push(
-    vscode.commands.registerCommand("nudge.broadcastMessage", (data) => {
-      // resultPanel.refresh();
+    vscode.commands.registerCommand("nudge.deleteChatData", ()=>{
+      sidebarPanel2.updateConfig();
     })
   );
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("config.saveData")) {
+        vscode.commands.executeCommand('setContext', 'saveData', vscode.workspace.getConfiguration("config").get("saveData"));
+      }
       if (e.affectsConfiguration("config.yamlFilePath") || e.affectsConfiguration("config.userId") || e.affectsConfiguration("config.appId")) {
         sidebarPanel1.refresh();
         sidebarPanel2.refresh();

@@ -1,4 +1,4 @@
-import { makeStyles, Radio, RadioGroup, RadioGroupOnChangeData } from '@fluentui/react-components';
+import { makeStyles, Persona, Radio, RadioGroup, RadioGroupOnChangeData } from '@fluentui/react-components';
 import React, { useEffect, useRef } from 'react';
 import TableComponent from './TableComponent';
 import { model } from '../models/model';
@@ -37,6 +37,11 @@ const useStyles = makeStyles({
         borderRadius: "4px",
         overflowX: 'auto',
         maxWidth: '100%'
+    },
+    persona: {
+        '& .fui-Persona__primaryText':{
+            display: 'none'
+        }
     }
 });
 
@@ -67,23 +72,31 @@ const Messages = (props: IMessageProps) => {
     return (
         <div ref={chatWindowRef} className={classes.chatWindow}>
             {messages.map((message, index) => (
-                <div
-                    key={index}
-                    className={`${classes.message} ${message.sender === 'user' ? classes.userMessage : classes.botMessage}`}
-                >
-                    {message.type === 'text' && message.text}
-                    {message.type === 'radio' && (
-                        <RadioGroup onChange={handleRadio}>
-                            {message?.options?.map((command) => (
-                                <Radio key={command.commandName} label={command.commandName} value={command.commandName} />
-                            ))}
-                        </RadioGroup>
-                    )}
-                    {message.type === 'table' && (
-                        <div className={classes.tableContainer}>
-                            <TableComponent body={message.options ?? []} headers={model[(message.text) as keyof typeof model]} />
-                        </div>
-                    )}
+                <div style={{display:'flex'}}>
+                    <Persona
+                    className={classes.persona}
+                        name={message.sender}
+                        textAlignment="start"
+                        presence={{ status: "available" }}
+                    />
+                    <div
+                        key={index}
+                        className={`${classes.message} ${message.sender === 'user' ? classes.userMessage : classes.botMessage}`}
+                    >
+                        {message.type === 'text' && message.text}
+                        {message.type === 'radio' && (
+                            <RadioGroup onChange={handleRadio}>
+                                {message?.options?.map((command) => (
+                                    <Radio key={command.commandName} label={command.commandName} value={command.commandName} />
+                                ))}
+                            </RadioGroup>
+                        )}
+                        {message.type === 'table' && (
+                            <div className={classes.tableContainer}>
+                                <TableComponent body={message.options ?? []} headers={model[(message.text) as keyof typeof model]} />
+                            </div>
+                        )}
+                    </div>
                 </div>
             ))}
         </div>

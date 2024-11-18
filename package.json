@@ -21,22 +21,29 @@
         "config.yamlFilePath": {
           "type": "string",
           "default": "",
+          "title": "YAML File Path",
           "description": "The path to the YAML configuration file within the workspace"
         },
         "config.userId": {
           "type": "string",
           "default": "",
-          "description": "User ID"
+          "title": "User ID"
         },
         "config.appId": {
           "type": "string",
           "default": "",
-          "description": "AppId"
+          "title": "App ID"
         },
         "config.persona": {
           "type": "string",
           "default": "",
-          "description": "Persona"
+          "title": "Persona"
+        },
+        "config.saveData": {
+          "type":"boolean",
+          "default": false,
+          "description": "To delete the history of nudge",
+          "title": "Enable delete button"
         }
       }
     },
@@ -44,8 +51,9 @@
       "activitybar": [
         {
           "id": "higway-sidebar-view",
-          "title": "Nudge",
-          "icon": "media/productivity-expert-icon.svg"
+          "title": "Nudge1",
+          "icon": "media/productivity-expert-icon.svg",
+          "contextualTitle": "activitybar-nudge"
         }
       ]
     },
@@ -72,27 +80,38 @@
           "id": "chat-layout",
           "name": "Chat",
           "icon": "media/productivity-expert-iconart.svg",
-          "contextualTitle": "Nudge",
+          "contextualTitle": "Chat",
           "when": "yamlFilePathSet"
         }
       ]
     },
     "menus": {
-      "view/item/context": [
+      "view/title": [
         {
-          "command": "nudge.selectYAMLFile",
-          "when": "view == nodeDependencies && viewItem == dependency",
-          "group": "inline"
+          "command": "nudge.deleteSidebarData",
+          "group": "navigation",
+          "when": "view == higway-sidebar && !saveData"
+          
         },
         {
-          "command": "nudge.selectYAMLFile"
+          "command": "nudge.deleteChatData",
+          "group": "navigation",
+          "when": "view == chat-layout && !saveData"
         }
       ]
     },
     "commands": [
       {
-        "command": "nudge.selectYAMLFile",
-        "title": "Select YAML File from Workspace"
+        "command": "nudge.deleteSidebarData",
+        "title": "Delete Sidebar Data",
+        "icon": "$(notebook-delete-cell)",
+        "category": "Nudge"
+      },
+      {
+        "command": "nudge.deleteChatData",
+        "title": "Delete chat Data",
+        "icon": "$(notebook-delete-cell)",
+        "category": "Chat"
       }
     ]
   },
