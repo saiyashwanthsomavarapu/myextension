@@ -15,13 +15,7 @@ serviceNames:
   blazemeter:  
     persona: 'performance'
     requestInput:
-      - workspaceId
-      - projectId
       - appId
   serviceMap:
     commands:
       - commandName: "AWS service used by Appid 5332"
-apiEndpoints:
-  dynatrace: "https://dev.nudgegenai.mlc.cld1np.thehartford.com/dynatrace"
-  blazemeter: "https://dev.nudgegenai.mlc.cld1np.thehartford.com/blazemeter"
-  serviceMap: "https://dev.chaigenai.mlc.cld1np.thehartford.com/summarize"
