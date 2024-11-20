@@ -7,11 +7,9 @@ const useStyles = makeStyles({
     chatWindow: {
         display: "flex",
         flexDirection: "column",
-        overflowY: "auto",
-        // maxHeight: "100vh",
-        padding: "10px",
+        overflow: "auto",
+        height: "94vh",
         gap: "10px",
-        // border: "1px solid var(--vscode-input-border)",
         borderRadius: "4px",
         boxSizing: "border-box",
     },
@@ -24,13 +22,20 @@ const useStyles = makeStyles({
     },
     userMessage: {
         alignSelf: "flex-end",
+        margin: '0.5rem',
         backgroundColor: "var(--vscode-input-background)",
         color: "var(--vscode-input-foreground)",
     },
     botMessage: {
         alignSelf: "flex-start",
-        // backgroundColor: "var(--vscode-list-hoverBackground)",
-        // color: "var(--vscode-input-foreground)",
+    },
+    botContainer: {
+        display: 'flex',
+        marginRight: '2.5rem',
+        flexDirection: 'row'
+    },
+    userContainer: {
+        display: 'flex', flexDirection: 'row-reverse'
     },
     tableContainer: {
         border: "1px solid var(--vscode-input-border)",
@@ -39,7 +44,7 @@ const useStyles = makeStyles({
         maxWidth: '100%'
     },
     persona: {
-        '& .fui-Persona__primaryText':{
+        '& .fui-Persona__primaryText': {
             display: 'none'
         }
     }
@@ -72,9 +77,9 @@ const Messages = (props: IMessageProps) => {
     return (
         <div ref={chatWindowRef} className={classes.chatWindow}>
             {messages.map((message, index) => (
-                <div style={{display:'flex'}}>
+                <div className={`${message.sender === 'user' ? classes.userContainer : classes.botContainer}`}>
                     <Persona
-                    className={classes.persona}
+                        className={classes.persona}
                         name={message.sender}
                         textAlignment="start"
                         presence={{ status: "available" }}
@@ -83,7 +88,7 @@ const Messages = (props: IMessageProps) => {
                         key={index}
                         className={`${classes.message} ${message.sender === 'user' ? classes.userMessage : classes.botMessage}`}
                     >
-                        {message.type === 'text' && message.text}
+                        {message.type === 'text' && <span>{message.text}</span>}
                         {message.type === 'radio' && (
                             <RadioGroup onChange={handleRadio}>
                                 {message?.options?.map((command) => (

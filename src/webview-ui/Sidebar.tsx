@@ -14,6 +14,7 @@ import { Initialize } from "./initialize";
 import { apiRequest, clearState, getApiData, setState } from "./helperFunctions";
 import TableComponent from "./components/TableComponent";
 import { useStyles } from "./styles/sidebar.styles";
+import { projectId, workspaceId } from "./appConstants";
 
 
 function Sidebar() {
@@ -113,8 +114,8 @@ function Sidebar() {
             apiRequest(selectService, {
                 persona: ymlData.persona,
                 userid: ymlData.userId.toString(),
-                workspaceId: "1234", // This property is not required and need to be removed in future development
-                projectId: "1234", // This property is not required and need to be removed in future development
+                workspaceId, // This property is not required and need to be removed in future development
+                projectId, // This property is not required and need to be removed in future development
                 appid: payloadRequest.appId.toString()
             });
             setPayloadRequest({ query: "", appId: "" });

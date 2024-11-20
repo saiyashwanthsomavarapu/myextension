@@ -1,4 +1,4 @@
-import { URLS } from "./apiEndpoints";
+import { URLS } from "./appConstants";
 
 interface IPayload {
     [key: string]: string;

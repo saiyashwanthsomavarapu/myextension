@@ -12,10 +12,8 @@ export const useStyles = makeStyles({
   },
   messagesContainer: {
     flex: 1,
-    overflowY: "auto",
     display: "flex",
     flexDirection: "column-reverse",
-    // padding: "10px",
     marginBottom: "60px", // Leaves space for the fixed input box
   },
   inputWrapper: {

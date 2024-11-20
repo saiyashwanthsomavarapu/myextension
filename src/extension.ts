@@ -5,8 +5,6 @@ import { ExtensionContext, Disposable } from "vscode";
 import { SidebarPanel1 } from "./panels/Sidebar/Panel1";
 import { selectYAMLFilePath } from "./fileOperations";
 import { SidebarPanel2 } from "./panels/Sidebar/Panel2";
-// import { ResultPanel } from "./panels/Sidebar/ResultPanel";
-import { getGlobalState, storeGlobalState } from "utils";
 import { InitializePanel } from "panels/Sidebar/InitializePanel";
 
 let disposables: Disposable[] = [];

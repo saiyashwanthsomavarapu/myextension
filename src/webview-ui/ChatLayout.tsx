@@ -7,6 +7,7 @@ import { useStyles } from './styles/chatLayout.styles';
 import './main.css';
 import { Initialize } from './initialize';
 import { Suggestions } from './components/SuggestionComponent';
+import { projectId, workspaceId } from './appConstants';
 
 
 
@@ -34,15 +35,10 @@ const ChatLayout = () => {
     const [suggestions, setSuggestions] = useState(['dynatrace', 'blazemeter', 'serviceMap']);
     const [selectedService, setSelectedService] = useState<string>('');
     const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-
     // Scroll to the bottom (newest message) whenever messages change
     useEffect(() => {
         if (messages.length > 0) {
             setState({messages: messages});
-        }
-        if (messagesEndRef.current) {
-            messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
         }
     }, [messages]);
 
@@ -51,7 +47,6 @@ const ChatLayout = () => {
         const savedState = window.vscode.getState();
         initializeData(savedState);
         window.addEventListener("message", handleMessageEvent);
-        
         return () => {
             window.removeEventListener('message', () => { });
         };
@@ -168,8 +163,8 @@ const ChatLayout = () => {
             if (selectedService === 'blazemeter') {
                 apiRequestWithErrorHandling(selectedService,
                     {
-                        workspaceId: '1234', // This property is not required and need to be removed in future development
-                        projectId: '1234', // This property is not required and need to be removed in future development
+                        workspaceId, // This property is not required and need to be removed in future development
+                        projectId, // This property is not required and need to be removed in future development
                         appid: inputValue || ymlData.appId.toString(),
                         userid: ymlData.userId.toString(),
                         persona: ymlData.persona
@@ -245,11 +240,16 @@ const ChatLayout = () => {
         }
     };
 
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter') {
+            handleSendMessage();
+        }
+    };
 
     return (
         <div className={classes.root}>
             {/* Messages container with scrollable content */}
-            <div className={classes.messagesContainer} ref={messagesEndRef}>
+            <div className={classes.messagesContainer}>
                 <Messages messages={messages} handleRadio={handleRadioChange} />
             </div>
 
@@ -269,6 +269,7 @@ const ChatLayout = () => {
                     placeholder="Type your message..."
                     value={inputValue}
                     onChange={(e) => handleInputChange(e.target.value)}
+                    onKeyDown={handleKeyDown}
                 />
                 <Button
                     className={classes.btn}

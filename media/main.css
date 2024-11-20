@@ -6,8 +6,8 @@
     --input-margin-horizontal: 0;
 }
 
-body {
-    padding: 0 var(--container-paddding);
+body { 
+    overflow: hidden;
     color: var(--vscode-foreground);
     font-size: var(--vscode-font-size);
     font-weight: var(--vscode-font-weight);
@@ -97,15 +97,6 @@ textarea::placeholder {
     --input-padding-horizontal: 4px;
     --input-margin-vertical: 4px;
     --input-margin-horizontal: 0;
-}
-
-body {
-    padding: 0 var(--container-paddding);
-    color: var(--vscode-foreground);
-    font-size: var(--vscode-font-size);
-    font-weight: var(--vscode-font-weight);
-    font-family: var(--vscode-font-family);
-    background-color: var(--vscode-editor-background);
 }
 
 ol,

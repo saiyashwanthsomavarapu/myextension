@@ -68,12 +68,13 @@ Git Colors
 }
 
 body {
-    padding: 0 var(--container-paddding);
+    padding: 0 !important;
     color: var(--vscode-foreground);
     font-size: var(--vscode-font-size);
     font-weight: var(--vscode-font-weight);
     font-family: var(--vscode-font-family);
     background-color: var(--vscode-editor-background);
+    overflow: hidden;
 }
 
 ol,
@@ -160,24 +161,9 @@ textarea::placeholder {
     --input-margin-horizontal: 0;
 }
 
-body {
-    padding: 0 var(--container-paddding);
-    color: var(--vscode-foreground);
-    font-size: var(--vscode-font-size);
-    font-weight: var(--vscode-font-weight);
-    font-family: var(--vscode-font-family);
-    background-color: var(--vscode-editor-background);
-}
-
 ol,
 ul {
     padding-left: var(--container-paddding);
-}
-
-body>*,
-form>* {
-    margin-block-start: var(--input-margin-vertical);
-    margin-block-end: var(--input-margin-vertical);
 }
 
 *:focus {

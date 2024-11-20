@@ -64,7 +64,6 @@ export class SidebarPanel1 implements WebviewViewProvider {
       "webview-ui",
       "sidebar.js", // Bundled React component
     ]);
-    const styleUri = getUri(webview, this._extensionUri, ["media", "main.css"]);
 
     const nonce = getNonce();
 

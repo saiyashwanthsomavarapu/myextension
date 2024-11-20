@@ -82,7 +82,6 @@ export class SidebarPanel2 implements WebviewViewProvider {
       "webview-ui",
       "chatlayout.js", // Bundled React component
     ]);
-    const styleUri = getUri(webview, this._extensionUri, ["media", "main.css"]);
 
     const nonce = getNonce();
 
@@ -94,7 +93,7 @@ export class SidebarPanel2 implements WebviewViewProvider {
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${nonce}';">
         </head>
-        <body>
+        <body style="padding:0;margin:0;overflow:hidden">
           <div id="root"></div>
           <script nonce="${nonce}">
             const vscode = acquireVsCodeApi();

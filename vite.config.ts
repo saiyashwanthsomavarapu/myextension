@@ -11,7 +11,6 @@ export default defineConfig({
         initialize: path.resolve(__dirname, "src/webview-ui/Configuration.tsx"),
         sidebar: path.resolve(__dirname, "src/webview-ui/Sidebar.tsx"),
         chatlayout: path.resolve(__dirname, "src/webview-ui/ChatLayout.tsx"),
-        result: path.resolve(__dirname, "src/webview-ui/Result.tsx"),
       },
       output: {
         entryFileNames: `[name].js`,
