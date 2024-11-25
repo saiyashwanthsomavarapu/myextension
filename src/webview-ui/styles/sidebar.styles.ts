@@ -3,6 +3,7 @@ import { makeStyles } from "@fluentui/react-components";
 export const useStyles = makeStyles({
     root: {
         backgroundColor: "var(--vscode-activityBar-background)",
+        wordBreak: "break-word",
         // color: "var(--vscode-editor-foreground)",
     },
     btn: {

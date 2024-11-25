@@ -1,5 +1,4 @@
 import { Link, makeStyles, Table, TableBody, TableCell, TableCellLayout, TableHeader, TableHeaderCell, TableRow } from '@fluentui/react-components'
-import React from 'react'
 import { IColumnDefinition } from 'webview-ui/models/model';
 
 interface ITableProps {

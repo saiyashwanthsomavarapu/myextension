@@ -1,4 +1,4 @@
-import { makeStyles, Persona, Radio, RadioGroup, RadioGroupOnChangeData } from '@fluentui/react-components';
+import { makeStyles, Persona, Radio, RadioGroup, RadioGroupOnChangeData, Text } from '@fluentui/react-components';
 import React, { useEffect, useRef } from 'react';
 import TableComponent from './TableComponent';
 import { model } from '../models/model';
@@ -90,11 +90,14 @@ const Messages = (props: IMessageProps) => {
                     >
                         {message.type === 'text' && <span>{message.text}</span>}
                         {message.type === 'radio' && (
-                            <RadioGroup onChange={handleRadio}>
-                                {message?.options?.map((command) => (
-                                    <Radio key={command.commandName} label={command.commandName} value={command.commandName} />
-                                ))}
-                            </RadioGroup>
+                            <>
+                                <Text>Select one of the following:</Text>
+                                <RadioGroup onChange={handleRadio}>
+                                    {message?.options?.map((command) => (
+                                        <Radio key={command.commandName} label={command.commandName} value={command.commandName} />
+                                    ))}
+                                </RadioGroup>
+                            </>
                         )}
                         {message.type === 'table' && (
                             <div className={classes.tableContainer}>
