@@ -167,14 +167,16 @@ const ChatLayout = () => {
                         projectId, // This property is not required and need to be removed in future development
                         appid: inputValue || ymlData.appId.toString(),
                         userid: ymlData.userId.toString(),
-                        persona: ymlData.persona
+                        persona: 'quality'
                     }
                 );
             }
 
             if (selectedService === 'serviceMap') {
                 apiRequestWithErrorHandling(selectedService, {
-                    prompt: dynatraceValues.query
+                    prompt: dynatraceValues.query,
+                    userid: ymlData.userId.toString(),
+                    persona: 'observability',
                 });
             }
 
@@ -186,7 +188,9 @@ const ChatLayout = () => {
                 })
                 apiRequestWithErrorHandling(selectedService, {
                     metricsSelector: value.queryString.replace('$$$', inputValue),
-                    dimensionName: value.dimensionNam
+                    dimensionName: value.dimensionNam,
+                    userid: ymlData.userId.toString(),
+                    persona: 'observability',
                 });
                 setDynatraceValues({
                     query: '',
@@ -215,7 +219,9 @@ const ChatLayout = () => {
                 addUserMessage(data?.value ?? '');
                 apiRequestWithErrorHandling(selectedService, {
                     metricsSelector: value.queryString.replace('$$$', inputValue),
-                    dimensionName: value.dimensionName
+                    dimensionName: value.dimensionName,
+                    userid: ymlData.userId.toString(),
+                    persona: 'observability',
                 });
                 return;
             } else {
@@ -235,7 +241,9 @@ const ChatLayout = () => {
 
         if (selectedService === 'serviceMap') {
             apiRequestWithErrorHandling(selectedService, {
-                prompt: data.value
+                prompt: data.value,
+                userid: ymlData.userId.toString(),
+                persona: 'observability',
             });
         }
     };

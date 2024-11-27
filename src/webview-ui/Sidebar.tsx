@@ -15,6 +15,7 @@ import { apiRequest, clearState, getApiData, setState } from "./helperFunctions"
 import TableComponent from "./components/TableComponent";
 import { useStyles } from "./styles/sidebar.styles";
 import { projectId, workspaceId } from "./appConstants";
+import { userInfo } from "os";
 
 
 function Sidebar() {
@@ -104,6 +105,8 @@ function Sidebar() {
                     payloadRequest.appId
                 ),
                 dimensionName: value.dimensionName,
+                userid: ymlData.userId.toString(),
+                persona: 'observability',
             });
             setPayloadRequest({
                 query: "",
@@ -112,7 +115,7 @@ function Sidebar() {
         }
         if (selectService === "blazemeter") {
             apiRequest(selectService, {
-                persona: ymlData.persona,
+                persona: 'quality',
                 userid: ymlData.userId.toString(),
                 workspaceId, // This property is not required and need to be removed in future development
                 projectId, // This property is not required and need to be removed in future development
@@ -123,7 +126,9 @@ function Sidebar() {
 
         if (selectService === "serviceMap") {
             apiRequest(selectService, {
-                prompt: payloadRequest.query
+                prompt: payloadRequest.query,
+                userId: ymlData.userId.toString(),
+                persona: 'observability'
             });
             setPayloadRequest({ query: "", appId: "" });
         }
